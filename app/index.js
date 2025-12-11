@@ -12,7 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 // Improved Color Palette
 const COLORS = {
   primary: "#1d72d3",
-  background: "#f8f9fa",  // Slightly warmer gray
+  background: "#E5E7EB",  // Slightly darker gray
   textDark: "#111417",
   textGray: "#647487",
   white: "#FFFFFF",

@@ -35,7 +35,7 @@ function CustomDrawerContent(props) {
   const router = useRouter();
 
   /* REPLACE DEFAULT EXPORT WITH THIS TO USE CONTEXT */
-  const { carProfile } = useCarContext();
+  const { carProfile, cars } = useCarContext();
   const userName = carProfile?.ownerName || "Misafir Kullanıcı";
   const themeColor = THEME_COLOR_MAP[carProfile?.themeColor] || THEME_COLOR_MAP.blue;
 
@@ -69,6 +69,18 @@ function CustomDrawerContent(props) {
             icon="folder-open"
             onPress={() => router.push('/documents')}
           />
+          <MenuRow
+            title="Araç Ekle"
+            icon="add-circle-outline"
+            onPress={() => router.push('/add-car')}
+          />
+          {cars.length > 1 && (
+            <MenuRow
+              title="Araç Değiştir"
+              icon="swap-horiz"
+              onPress={() => router.push('/select-car')}
+            />
+          )}
         </View>
 
       </DrawerContentScrollView>
@@ -109,6 +121,8 @@ export default function Layout() {
           <Drawer.Screen name="official-docs" />
           <Drawer.Screen name="fuel-history" />
           <Drawer.Screen name="settings" />
+          <Drawer.Screen name="select-car" />
+          <Drawer.Screen name="add-car" />
         </Drawer>
       </GestureHandlerRootView>
     </CarProvider>

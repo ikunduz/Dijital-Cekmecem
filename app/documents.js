@@ -8,7 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 // --- COLORS (Improved Palette) ---
 const COLORS = {
   primary: "#1d72d3",
-  background: "#f8f9fa",  // Slightly warmer than pure white
+  background: "#E5E7EB",  // Slightly darker gray
   textDark: "#111417",
   textGray: "#647487",
   white: "#FFFFFF",

@@ -7,7 +7,7 @@ import { useCarContext } from '../context/CarContext';
 
 const COLORS = {
     primary: "#1d72d3",
-    background: "#f6f7f8",
+    background: "#E5E7EB",
     textDark: "#111417",
     textGray: "#647487",
     white: "#FFFFFF",
