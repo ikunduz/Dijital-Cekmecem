@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { Icon, IconButton, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useCarContext } from '../context/CarContext';
+import { useHomeContext } from '../context/HomeContext';
 
 const COLORS = {
-    primary: "#1d72d3",
+    primary: "#F57C00",
     background: "#E5E7EB",
     textDark: "#111417",
     textGray: "#647487",
@@ -25,35 +25,54 @@ const parseDate = (dateStr) => {
     return new Date(0);
 };
 
-export default function FuelHistory() {
-    const router = useRouter();
-    const { history } = useCarContext();
+const SUBTYPE_LABELS = {
+    electricity: 'Elektrik',
+    water: 'Su',
+    gas: 'Doğalgaz',
+    internet: 'İnternet',
+    dues: 'Aidat',
+    phone: 'Telefon',
+    other: 'Diğer'
+};
 
-    // Filter and sort fuel records
-    const fuelRecords = useMemo(() => {
+export default function BillHistory() {
+    const router = useRouter();
+    const { history } = useHomeContext();
+
+    // Filter and sort bill records
+    const billRecords = useMemo(() => {
         return history
-            .filter(r => r.type === 'fuel')
+            .filter(r => r.type === 'bill')
             .sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Newest first
     }, [history]);
 
     // Calculate totals
     const totals = useMemo(() => {
-        if (fuelRecords.length === 0) return null;
+        if (billRecords.length === 0) return null;
 
-        const totalCost = fuelRecords.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
-        const totalLiters = fuelRecords.reduce((sum, r) => sum + (parseFloat(r.liters) || 0), 0);
+        const totalCost = billRecords.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
 
         // Get oldest record date
-        const oldestRecord = fuelRecords[fuelRecords.length - 1];
+        const oldestRecord = billRecords[billRecords.length - 1];
         const sinceDate = oldestRecord?.date || '';
 
         return {
             totalCost: totalCost.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }),
-            totalLiters: totalLiters.toFixed(1),
             sinceDate,
-            recordCount: fuelRecords.length
+            recordCount: billRecords.length
         };
-    }, [fuelRecords]);
+    }, [billRecords]);
+
+    const getIcon = (subType) => {
+        switch (subType) {
+            case 'electricity': return 'flash';
+            case 'water': return 'water';
+            case 'gas': return 'fire';
+            case 'internet': return 'wifi';
+            case 'phone': return 'phone';
+            default: return 'receipt';
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -63,35 +82,40 @@ export default function FuelHistory() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Icon source="arrow-left" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Yakıt Geçmişi</Text>
+                <Text style={styles.headerTitle}>Fatura Geçmişi</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-                {/* FUEL LIST */}
-                {fuelRecords.length === 0 ? (
+                {/* BILL LIST */}
+                {billRecords.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Icon source="gas-station" size={64} color={COLORS.textGray} />
-                        <Text style={styles.emptyText}>Henüz yakıt kaydı yok</Text>
-                        <Text style={styles.emptySubtext}>FAB (+) ile yakıt ekleyin</Text>
+                        <Icon source="receipt" size={64} color={COLORS.textGray} />
+                        <Text style={styles.emptyText}>Henüz fatura kaydı yok</Text>
+                        <Text style={styles.emptySubtext}>FAB (+) ile fatura ekleyin</Text>
                     </View>
                 ) : (
                     <View style={styles.listContainer}>
-                        {fuelRecords.map((record, index) => (
+                        {billRecords.map((record, index) => (
                             <React.Fragment key={record.id}>
-                                <View style={styles.listItem}>
-                                    <View style={styles.dateColumn}>
-                                        <Text style={styles.dateText}>{record.date}</Text>
+                                <TouchableOpacity
+                                    style={styles.listItem}
+                                    onPress={() => router.push({ pathname: '/add-record', params: { recordId: record.id } })}
+                                >
+                                    <View style={styles.iconColumn}>
+                                        <Icon source={getIcon(record.subType)} size={24} color={COLORS.primary} />
                                     </View>
-                                    <View style={styles.litersColumn}>
-                                        <Text style={styles.litersText}>{record.liters || '-'} L</Text>
+                                    <View style={styles.infoColumn}>
+                                        <Text style={styles.subTypeText}>{SUBTYPE_LABELS[record.subType] || 'Fatura'}</Text>
+                                        <Text style={styles.dateText}>{record.date}</Text>
                                     </View>
                                     <View style={styles.costColumn}>
                                         <Text style={styles.costText}>{parseFloat(record.cost || 0).toLocaleString('tr-TR')} ₺</Text>
+                                        {record.dueDate && <Text style={styles.dueText}>SON: {record.dueDate}</Text>}
                                     </View>
-                                </View>
-                                {index < fuelRecords.length - 1 && <Divider style={styles.divider} />}
+                                </TouchableOpacity>
+                                {index < billRecords.length - 1 && <Divider style={styles.divider} />}
                             </React.Fragment>
                         ))}
                     </View>
@@ -100,10 +124,6 @@ export default function FuelHistory() {
                 {/* TOTALS FOOTER */}
                 {totals && (
                     <View style={styles.totalsContainer}>
-                        <View style={styles.totalsRow}>
-                            <Text style={styles.totalsLabel}>Toplam Yakıt</Text>
-                            <Text style={styles.totalsValue}>{totals.totalLiters} Litre</Text>
-                        </View>
                         <View style={styles.totalsRow}>
                             <Text style={styles.totalsLabel}>Toplam Harcama</Text>
                             <Text style={[styles.totalsValue, { color: COLORS.red, fontWeight: '700' }]}>{totals.totalCost}</Text>
@@ -148,8 +168,6 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: 16,
     },
-
-    // EMPTY STATE
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -166,8 +184,6 @@ const styles = StyleSheet.create({
         color: COLORS.textGray,
         marginTop: 4,
     },
-
-    // LIST
     listContainer: {
         backgroundColor: COLORS.white,
         borderRadius: 12,
@@ -184,24 +200,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 14,
     },
-    dateColumn: {
-        flex: 1,
-    },
-    dateText: {
-        fontSize: 14,
-        color: COLORS.textGray,
-    },
-    litersColumn: {
-        width: 70,
+    iconColumn: {
+        width: 40,
         alignItems: 'center',
     },
-    litersText: {
+    infoColumn: {
+        flex: 1,
+        marginLeft: 8,
+    },
+    subTypeText: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.primary,
+        color: COLORS.textDark,
+    },
+    dateText: {
+        fontSize: 13,
+        color: COLORS.textGray,
     },
     costColumn: {
-        width: 90,
+        width: 100,
         alignItems: 'flex-end',
     },
     costText: {
@@ -209,11 +226,14 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: COLORS.textDark,
     },
+    dueText: {
+        fontSize: 11,
+        color: COLORS.red,
+        marginTop: 2,
+    },
     divider: {
         backgroundColor: '#f3f4f6',
     },
-
-    // TOTALS
     totalsContainer: {
         backgroundColor: COLORS.white,
         borderRadius: 12,

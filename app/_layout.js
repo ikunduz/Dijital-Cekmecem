@@ -6,10 +6,10 @@ import { Divider, Icon as PaperIcon } from 'react-native-paper'; // Renamed impo
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, usePathname } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { CarProvider, useCarContext } from '../context/CarContext';
+import { HomeProvider, useHomeContext } from '../context/HomeContext';
 
 const COLORS = {
-  primary: "#1d72d3",
+  primary: "#F57C00", // Home Warmth Orange
   white: "#FFFFFF",
   textGray: "#647487",
   background: "#f8f9fa",
@@ -19,7 +19,7 @@ const COLORS = {
 const THEME_COLOR_MAP = {
   blue: '#1d72d3',
   teal: '#0d9488',
-  orange: '#ea580c',
+  orange: '#F57C00',
   slate: '#475569',
 };
 
@@ -35,9 +35,9 @@ function CustomDrawerContent(props) {
   const router = useRouter();
 
   /* REPLACE DEFAULT EXPORT WITH THIS TO USE CONTEXT */
-  const { carProfile, cars } = useCarContext();
-  const userName = carProfile?.ownerName || "Misafir Kullanıcı";
-  const themeColor = THEME_COLOR_MAP[carProfile?.themeColor] || THEME_COLOR_MAP.blue;
+  const { homeProfile, homes } = useHomeContext();
+  const userName = homeProfile?.ownerName || "Misafir Kullanıcı";
+  const themeColor = THEME_COLOR_MAP[homeProfile?.themeColor] || THEME_COLOR_MAP.orange;
 
   return (
     <View style={{ flex: 1 }}>
@@ -70,15 +70,15 @@ function CustomDrawerContent(props) {
             onPress={() => router.push('/documents')}
           />
           <MenuRow
-            title="Araç Ekle"
+            title="Ev Ekle"
             icon="add-circle-outline"
-            onPress={() => router.push('/add-car')}
+            onPress={() => router.push('/add-home')}
           />
-          {cars.length > 1 && (
+          {homes.length > 1 && (
             <MenuRow
-              title="Araç Değiştir"
+              title="Ev Değiştir"
               icon="swap-horiz"
-              onPress={() => router.push('/select-car')}
+              onPress={() => router.push('/select-home')}
             />
           )}
         </View>
@@ -103,7 +103,7 @@ function CustomDrawerContent(props) {
 
 export default function Layout() {
   return (
-    <CarProvider>
+    <HomeProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Drawer
           drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -119,13 +119,13 @@ export default function Layout() {
           <Drawer.Screen name="add-record" />
           <Drawer.Screen name="folder-detail" />
           <Drawer.Screen name="official-docs" />
-          <Drawer.Screen name="fuel-history" />
+          <Drawer.Screen name="bill-history" />
           <Drawer.Screen name="settings" />
-          <Drawer.Screen name="select-car" />
-          <Drawer.Screen name="add-car" />
+          <Drawer.Screen name="select-home" />
+          <Drawer.Screen name="add-home" />
         </Drawer>
       </GestureHandlerRootView>
-    </CarProvider>
+    </HomeProvider>
   );
 }
 

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import { useCarContext } from '../context/CarContext';
+import { useHomeContext } from '../context/HomeContext';
 import * as Sharing from 'expo-sharing';
 
 const COLORS = {
-  primary: "#1d72d3",
+  primary: "#F57C00",
   background: "#E5E7EB",
   textDark: "#111417",
   textGray: "#647487",
@@ -18,59 +18,49 @@ const COLORS = {
 
 export default function History() {
   const router = useRouter();
-  const { history, deleteRecord } = useCarContext();
+  const { history, deleteRecord } = useHomeContext();
   const [previewItem, setPreviewItem] = useState(null);
 
-  // Filter only service/maintenance records
-  const serviceRecords = history.filter(r => r.type === 'service');
+  // Show all history sorted by date
+  const records = [...history].sort((a, b) => {
+    // Parse DD.MM.YYYY
+    const dateA = a.date.split('.').reverse().join('-');
+    const dateB = b.date.split('.').reverse().join('-');
+    return new Date(dateB) - new Date(dateA);
+  });
 
   const getIcon = (type) => {
     switch (type) {
-      case 'fuel': return 'gas-station';
-      case 'service': return 'wrench';
+      case 'bill': return 'receipt';
+      case 'warranty': return 'shield-check';
       case 'doc': return 'file-document';
-      case 'expense': return 'cash';
       default: return 'history';
     }
   };
 
-  // Helper to check if file is PDF
-  const isPdfFile = (uri) => {
-    if (!uri) return false;
-    return uri.toLowerCase().includes('.pdf') || uri.includes('pdf');
-  };
+  const isPdfFile = (uri) => uri && (uri.toLowerCase().includes('.pdf') || uri.includes('pdf'));
 
-  // Helper to open PDF
   const openPdf = async (uri) => {
     try {
       const isAvailable = await Sharing.isAvailableAsync();
       if (isAvailable) {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: 'PDF Dosyasını Aç',
-        });
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'PDF Dosyasını Aç' });
       } else {
-        Alert.alert('Hata', 'Bu cihazda dosya paylaşımı desteklenmiyor.');
+        Alert.alert('Hata', 'Paylaşım desteklenmiyor.');
       }
     } catch (error) {
-      console.error('Error opening PDF:', error);
-      Alert.alert('Hata', 'PDF açılırken bir sorun oluştu.');
+      Alert.alert('Hata', 'PDF açılamadı.');
     }
   };
 
-  // Helper to open Image
   const openImage = async (uri) => {
     try {
       const isAvailable = await Sharing.isAvailableAsync();
       if (isAvailable) {
-        await Sharing.shareAsync(uri, {
-          mimeType: 'image/jpeg',
-          dialogTitle: 'Görüntüyü Aç',
-        });
+        await Sharing.shareAsync(uri, { mimeType: 'image/jpeg', dialogTitle: 'Görüntüyü Aç' });
       }
     } catch (error) {
-      console.error('Error opening Image:', error);
-      Alert.alert('Hata', 'Dosya açılırken bir sorun oluştu.');
+      Alert.alert('Hata', 'Dosya açılamadı.');
     }
   };
 
@@ -85,37 +75,19 @@ export default function History() {
           style: "destructive",
           onPress: async () => {
             await deleteRecord(item.id);
-            if (previewItem?.id === item.id) {
-              setPreviewItem(null);
-            }
+            setPreviewItem(null);
           }
         }
       ]
     );
   };
 
-  const getRecordInfo = (item) => {
-    // Service
-    if (item.type === 'service') {
-      return {
-        title: 'Bakım Kaydı',
-        lines: [
-          { label: 'Tarih', value: item.date },
-          item.km ? { label: 'KM', value: parseInt(item.km).toLocaleString('tr-TR') } : null,
-          item.cost ? { label: 'Tutar', value: `${parseFloat(item.cost).toLocaleString('tr-TR')} ₺` } : null,
-          item.description ? { label: 'Not', value: item.description } : null,
-        ].filter(Boolean)
-      };
-    }
-    // Fallback
-    return {
-      title: 'Kayıt Detayı',
-      lines: [
-        { label: 'Tarih', value: item.date },
-        item.description ? { label: 'Açıklama', value: item.description } : null,
-      ].filter(Boolean)
-    };
-  }
+  const getRecordTitle = (item) => {
+    if (item.type === 'bill') return 'Fatura';
+    if (item.type === 'warranty') return item.productName || 'Garanti';
+    if (item.type === 'doc') return 'Resmi Belge';
+    return 'Kayıt';
+  };
 
   const renderItem = ({ item }) => (
     <Surface style={styles.card} elevation={1}>
@@ -128,15 +100,14 @@ export default function History() {
             <Icon source={getIcon(item.type)} size={24} color={COLORS.primary} />
           </View>
           <View>
-            <Text style={styles.cardTitle}>{item.description || "Periyodik Bakım"}</Text>
-            <Text style={styles.cardDate}>{item.date} • {item.km} KM</Text>
+            <Text style={styles.cardTitle}>{getRecordTitle(item)}</Text>
+            <Text style={styles.cardDate}>{item.date}</Text>
           </View>
         </View>
       </TouchableOpacity>
 
       <View style={styles.cardRight}>
-        <Text style={styles.cardCost}>{item.cost} ₺</Text>
-        {/* Keeping the edit button on the card for quick access, but removing delete to prioritize detail view */}
+        {item.cost && <Text style={styles.cardCost}>{item.cost} ₺</Text>}
         <TouchableOpacity
           onPress={() => router.push({ pathname: '/add-record', params: { recordId: item.id } })}
           style={styles.iconBtn}
@@ -149,42 +120,35 @@ export default function History() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-
-      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Icon source="arrow-left" size={24} color={COLORS.textDark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Servis Geçmişi</Text>
+        <Text style={styles.headerTitle}>Tüm İşlem Geçmişi</Text>
         <TouchableOpacity onPress={() => router.push({ pathname: '/add-record' })} style={styles.backButton}>
           <Icon source="plus" size={24} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* CONTENT */}
-      {serviceRecords.length === 0 ? (
+      {records.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
-            <Icon source="wrench" size={48} color={COLORS.textGray} />
+            <Icon source="history" size={48} color={COLORS.textGray} />
           </View>
-          <Text style={styles.emptyTitle}>Henüz servis kaydı yok</Text>
-          <Text style={styles.emptySubtitle}>
-            Kayıt eklemek için sağ üstteki + butonunu kullanın.
-          </Text>
+          <Text style={styles.emptyTitle}>Henüz kayıt yok</Text>
         </View>
       ) : (
         <FlatList
-          data={serviceRecords}
+          data={records}
           keyExtractor={item => item.id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
         />
       )}
 
-      {/* DETAIL MODAL */}
+      {/* Basic Preview Modal (Simplified for generic usage) */}
       <Modal visible={!!previewItem} animationType="slide" onRequestClose={() => setPreviewItem(null)}>
         <SafeAreaView style={styles.modalContainer}>
-          {/* Modal Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => setPreviewItem(null)} style={styles.backButton}>
               <Icon source="close" size={24} color={COLORS.textDark} />
@@ -197,56 +161,36 @@ export default function History() {
 
           {previewItem && (
             <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
-
-              {/* 1. INFO SECTION (Top) */}
               <View style={styles.detailsContainer}>
-                <Text style={styles.detailsTitle}>{getRecordInfo(previewItem).title}</Text>
-
-                {getRecordInfo(previewItem).lines.map((item, index) => (
-                  <View key={index} style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>{item.label}</Text>
-                    <Text style={styles.detailValue}>{item.value}</Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Tarih</Text>
+                  <Text style={styles.detailValue}>{previewItem.date}</Text>
+                </View>
+                {previewItem.cost && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Tutar</Text>
+                    <Text style={styles.detailValue}>{previewItem.cost} ₺</Text>
                   </View>
-                ))}
+                )}
+                {previewItem.description && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Açıklama</Text>
+                    <Text style={styles.detailValue}>{previewItem.description}</Text>
+                  </View>
+                )}
               </View>
 
-              {/* 2. FILE SECTION (Bottom) */}
               {previewItem.image ? (
                 <View style={styles.fileSection}>
-                  <Text style={styles.sectionTitle}>Dosya Eki</Text>
-
+                  <Text style={styles.sectionTitle}>Dosya</Text>
                   <TouchableOpacity
                     style={styles.fileButton}
                     onPress={() => isPdfFile(previewItem.image) ? openPdf(previewItem.image) : openImage(previewItem.image)}
                   >
-                    <View style={[styles.fileIconBox, { backgroundColor: isPdfFile(previewItem.image) ? '#fef2f2' : '#f0f9ff' }]}>
-                      <Icon
-                        source={isPdfFile(previewItem.image) ? "file-pdf-box" : "image"}
-                        size={32}
-                        color={isPdfFile(previewItem.image) ? COLORS.danger : COLORS.primary}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.fileName}>
-                        {isPdfFile(previewItem.image) ? 'PDF Dosyası' : 'Resim Dosyası'}
-                      </Text>
-                      <Text style={styles.fileAction}>
-                        Görüntülemek için tıklayın
-                      </Text>
-                    </View>
-                    <Icon source="chevron-right" size={24} color={COLORS.textGray} />
+                    <Text>Dosyayı Görüntüle</Text>
                   </TouchableOpacity>
                 </View>
-              ) : (
-                <View style={styles.fileSection}>
-                  <Text style={styles.sectionTitle}>Dosya Eki</Text>
-                  <View style={styles.noFileRow}>
-                    <Icon source="file-hidden" size={24} color={COLORS.textGray} />
-                    <Text style={styles.noFileText}>Dosya eklenmemiş</Text>
-                  </View>
-                </View>
-              )}
-
+              ) : null}
             </ScrollView>
           )}
         </SafeAreaView>
@@ -257,210 +201,30 @@ export default function History() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: COLORS.white,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.textDark,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-    marginRight: -8,
-  },
-  listContent: {
-    padding: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingBottom: 100,
-  },
-  emptyIconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f3f4f6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.textDark,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: COLORS.textGray,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-
-  // CARD
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.white,
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-  },
-  cardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#e6f0fa',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.textDark,
-  },
-  cardDate: {
-    fontSize: 13,
-    color: COLORS.textGray,
-    marginTop: 2,
-  },
-  cardRight: {
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  iconBtn: {
-    padding: 4,
-  },
-  cardCost: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-
-  // MODAL & DETAILS
-  modalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  modalContent: {
-    flex: 1,
-  },
-  modalScrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  detailsContainer: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  detailsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.textDark,
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: COLORS.textGray,
-    fontWeight: '500',
-  },
-  detailValue: {
-    fontSize: 14,
-    color: COLORS.textDark,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'right',
-    marginLeft: 16,
-  },
-
-  // FILE SECTION
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.textDark,
-    marginBottom: 12,
-    marginLeft: 4,
-  },
-  fileSection: {
-    marginBottom: 20,
-  },
-  fileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.white,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: 16,
-  },
-  fileIconBox: {
-    width: 50,
-    height: 50,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fileName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: COLORS.textDark,
-    marginBottom: 2,
-  },
-  fileAction: {
-    fontSize: 13,
-    color: COLORS.primary,
-    fontWeight: '500',
-  },
-  noFileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: 12,
-  },
-  noFileText: {
-    color: COLORS.textGray,
-    fontSize: 14,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textDark },
+  backButton: { padding: 8, marginHorizontal: -8 },
+  listContent: { padding: 16 },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 },
+  emptyIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: COLORS.textDark },
+  card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.white, padding: 16, marginBottom: 12, borderRadius: 12 },
+  cardLeft: { flexDirection: 'row', alignItems: 'center' },
+  iconBox: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },
+  cardDate: { fontSize: 13, color: COLORS.textGray, marginTop: 2 },
+  cardRight: { alignItems: 'flex-end', gap: 8 },
+  iconBtn: { padding: 4 },
+  cardCost: { fontSize: 16, fontWeight: '700', color: COLORS.primary },
+  modalContainer: { flex: 1, backgroundColor: COLORS.background },
+  modalContent: { flex: 1 },
+  modalScrollContent: { padding: 20 },
+  detailsContainer: { backgroundColor: COLORS.white, borderRadius: 12, padding: 16, marginBottom: 20 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  detailLabel: { color: COLORS.textGray },
+  detailValue: { fontWeight: '600', color: COLORS.textDark, textAlign: 'right', flex: 1, marginLeft: 16 },
+  fileSection: { marginBottom: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
+  fileButton: { backgroundColor: COLORS.white, padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
 });

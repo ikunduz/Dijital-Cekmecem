@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } fr
 import { TextInput, Button, Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useCarContext } from '../context/CarContext';
+import { useHomeContext } from '../context/HomeContext';
 import * as ImagePicker from 'expo-image-picker';
 
 const COLORS = {
-    primary: "#1d72d3",
+    primary: "#F57C00", // Home Warmth Orange
     background: "#E5E7EB",
     textDark: "#111417",
     textGray: "#647487",
@@ -15,59 +15,59 @@ const COLORS = {
     border: "#e5e7eb",
 };
 
-export default function AddCar() {
+export default function AddHome() {
     const router = useRouter();
-    const { addNewCar } = useCarContext();
+    const { addNewHome } = useHomeContext();
 
     const [ownerName, setOwnerName] = useState('');
-    const [make, setMake] = useState('');
-    const [model, setModel] = useState('');
-    const [plate, setPlate] = useState('');
-    const [year, setYear] = useState('');
-    const [carImage, setCarImage] = useState(null);
+    const [title, setTitle] = useState(''); // e.g. "Evim", "Yazlık"
+    const [address, setAddress] = useState('');
+    const [daskNumber, setDaskNumber] = useState('');
+    const [internetNumber, setInternetNumber] = useState('');
+    const [homeImage, setHomeImage] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const pickCarImage = async () => {
+    const pickHomeImage = async () => {
         try {
             let result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: 'Images',
                 allowsEditing: true,
                 aspect: [16, 9],
                 quality: 0.7,
             });
 
             if (!result.canceled) {
-                setCarImage(result.assets[0].uri);
+                setHomeImage(result.assets[0].uri);
             }
         } catch (error) {
-            console.error('Pick car image error:', error);
+            console.error('Pick home image error:', error);
             Alert.alert("Hata", "Fotoğraf seçilirken bir hata oluştu.");
         }
     };
 
     const handleSave = async () => {
-        if (!make || !model || !plate) {
-            Alert.alert('Eksik Bilgi', 'Lütfen en az Marka, Model ve Plaka bilgilerini doldurun.');
+        if (!title) {
+            Alert.alert('Eksik Bilgi', 'Lütfen Ev/Mekan Adı giriniz.');
             return;
         }
 
         setLoading(true);
         try {
-            await addNewCar({
+            await addNewHome({
                 ownerName,
-                make,
-                model,
-                plate,
-                year,
-                carImage,
-                themeColor: 'blue' // Default theme
+                title,
+                address,
+                daskNumber,
+                internetNumber,
+                homeImage,
+                themeColor: 'orange' // Default theme
             });
-            Alert.alert('Başarılı', 'Yeni araç eklendi!', [
+            Alert.alert('Başarılı', 'Yeni ev eklendi!', [
                 { text: 'Tamam', onPress: () => router.replace('/') }
             ]);
         } catch (error) {
             console.error(error);
-            Alert.alert('Hata', 'Araç eklenirken bir sorun oluştu.');
+            Alert.alert('Hata', 'Ev eklenirken bir sorun oluştu.');
         } finally {
             setLoading(false);
         }
@@ -81,77 +81,71 @@ export default function AddCar() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
                     <Icon source="close" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Yeni Araç Ekle</Text>
+                <Text style={styles.headerTitle}>Yeni Ev Ekle</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
 
-                {/* ARAÇ FOTOĞRAFI */}
+                {/* EV FOTOĞRAFI */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Araç Fotoğrafı</Text>
-                    <TouchableOpacity style={styles.carImageContainer} onPress={pickCarImage}>
-                        {carImage ? (
-                            <Image source={{ uri: carImage }} style={styles.carImage} resizeMode="cover" />
+                    <Text style={styles.sectionTitle}>Ev Fotoğrafı</Text>
+                    <TouchableOpacity style={styles.imageContainer} onPress={pickHomeImage}>
+                        {homeImage ? (
+                            <Image source={{ uri: homeImage }} style={styles.homeImage} resizeMode="cover" />
                         ) : (
-                            <View style={styles.carImagePlaceholder}>
+                            <View style={styles.imagePlaceholder}>
                                 <Icon source="camera-plus" size={40} color={COLORS.textGray} />
-                                <Text style={styles.carImagePlaceholderText}>Araç Fotoğrafı Ekle</Text>
+                                <Text style={styles.placeholderText}>Ev Fotoğrafı Ekle</Text>
                             </View>
                         )}
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Sürücü Bilgileri</Text>
+                    <Text style={styles.sectionTitle}>Ev Bilgileri</Text>
                     <TextInput
-                        label="Ad Soyad (Opsiyonel)"
+                        label="Ev Adı (Örn: Evim, Yazlık)"
+                        value={title}
+                        onChangeText={setTitle}
+                        mode="outlined"
+                        style={styles.input}
+                        outlineColor={COLORS.border}
+                        activeOutlineColor={COLORS.primary}
+                    />
+                    <TextInput
+                        label="Adres (Opsiyonel)"
+                        value={address}
+                        onChangeText={setAddress}
+                        mode="outlined"
+                        multiline
+                        style={styles.input}
+                        outlineColor={COLORS.border}
+                        activeOutlineColor={COLORS.primary}
+                    />
+                    <TextInput
+                        label="DASK Poliçe No (Opsiyonel)"
+                        value={daskNumber}
+                        onChangeText={setDaskNumber}
+                        mode="outlined"
+                        style={styles.input}
+                        outlineColor={COLORS.border}
+                        activeOutlineColor={COLORS.primary}
+                    />
+                    <TextInput
+                        label="İnternet Abone No (Opsiyonel)"
+                        value={internetNumber}
+                        onChangeText={setInternetNumber}
+                        mode="outlined"
+                        style={styles.input}
+                        outlineColor={COLORS.border}
+                        activeOutlineColor={COLORS.primary}
+                    />
+                    <TextInput
+                        label="Ev Sahibi / Kullanıcı Adı"
                         value={ownerName}
                         onChangeText={setOwnerName}
                         mode="outlined"
-                        style={styles.input}
-                        outlineColor={COLORS.border}
-                        activeOutlineColor={COLORS.primary}
-                    />
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Araç Bilgileri</Text>
-                    <TextInput
-                        label="Marka (Örn: Volkswagen)"
-                        value={make}
-                        onChangeText={setMake}
-                        mode="outlined"
-                        style={styles.input}
-                        outlineColor={COLORS.border}
-                        activeOutlineColor={COLORS.primary}
-                    />
-                    <TextInput
-                        label="Model (Örn: Golf)"
-                        value={model}
-                        onChangeText={setModel}
-                        mode="outlined"
-                        style={styles.input}
-                        outlineColor={COLORS.border}
-                        activeOutlineColor={COLORS.primary}
-                    />
-                    <TextInput
-                        label="Plaka (Örn: 34 ABC 123)"
-                        value={plate}
-                        onChangeText={setPlate}
-                        mode="outlined"
-                        autoCapitalize="characters"
-                        style={styles.input}
-                        outlineColor={COLORS.border}
-                        activeOutlineColor={COLORS.primary}
-                    />
-                    <TextInput
-                        label="Model Yılı (Opsiyonel)"
-                        value={year}
-                        onChangeText={setYear}
-                        mode="outlined"
-                        keyboardType="numeric"
-                        maxLength={4}
                         style={styles.input}
                         outlineColor={COLORS.border}
                         activeOutlineColor={COLORS.primary}
@@ -167,7 +161,7 @@ export default function AddCar() {
                     disabled={loading}
                     buttonColor={COLORS.primary}
                 >
-                    Araç Ekle
+                    Ev Ekle
                 </Button>
 
                 <View style={{ height: 100 }} />
@@ -220,18 +214,18 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginTop: 16,
     },
-    carImageContainer: {
+    imageContainer: {
         width: '100%',
         height: 180,
         borderRadius: 12,
         overflow: 'hidden',
         backgroundColor: COLORS.background,
     },
-    carImage: {
+    homeImage: {
         width: '100%',
         height: '100%',
     },
-    carImagePlaceholder: {
+    imagePlaceholder: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
@@ -240,7 +234,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
         borderRadius: 12,
     },
-    carImagePlaceholderText: {
+    placeholderText: {
         marginTop: 8,
         fontSize: 14,
         color: COLORS.textGray,

@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { Button, Icon, ActivityIndicator } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useCarContext } from '../context/CarContext';
+import { useHomeContext } from '../context/HomeContext';
 import * as Print from 'expo-print';
 import { shareAsync } from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 
 const COLORS = {
-    primary: "#1d72d3",
+    primary: "#F57C00",
     background: "#f8f9fa",
     textDark: "#111417",
     textGray: "#647487",
@@ -17,52 +17,25 @@ const COLORS = {
     border: "#e5e7eb",
 };
 
-export default function ReportPage() {
+export default function HomeReportPage() {
     const router = useRouter();
-    const { history, carProfile } = useCarContext();
+    const { history, homeProfile } = useHomeContext();
     const [loading, setLoading] = useState(false);
 
-    const carInfo = {
-        name: (carProfile?.make && carProfile?.model) ? `${carProfile.make} ${carProfile.model}` : "Belirtilmemiş",
-        plate: carProfile?.plate || "Belirtilmemiş",
+    const homeInfo = {
+        name: homeProfile?.title || "Evim",
+        address: homeProfile?.address || "Adres Girilmemiş",
     };
 
-    // Filter out fuel records - only service and doc records
-    const reportRecords = history.filter(r => r.type === 'service' || r.type === 'doc');
+    // All records are relevant for home report
+    const reportRecords = history;
 
-    // Categorize records intelligently
+    // Categorize records
     const categorizeRecord = (item) => {
-        const desc = (item.description || '').toLowerCase();
-        const subType = item.subType || '';
-
-        // Periyodik Bakım
-        if (desc.includes('periyodik') || desc.includes('yağ') || desc.includes('filtre') ||
-            desc.includes('bakım') || item.isPeriodicMaintenance) {
-            return 'Periyodik Bakım';
-        }
-
-        // Sigorta / Kasko / Muayene
-        if (subType === 'insurance' || subType === 'kasko' || subType === 'inspection' ||
-            desc.includes('sigorta') || desc.includes('kasko') || desc.includes('muayene') ||
-            desc.includes('trafik') || desc.includes('zorunlu')) {
-            return 'Sigorta & Belgeler';
-        }
-
-        // Satın Alımlar (Lastik, Akü, Parça vb.)
-        if (desc.includes('lastik') || desc.includes('akü') || desc.includes('fren') ||
-            desc.includes('balata') || desc.includes('disk') || desc.includes('amortisör') ||
-            desc.includes('parça') || desc.includes('yedek')) {
-            return 'Satın Alımlar';
-        }
-
-        // Arıza / Tamir
-        if (desc.includes('arıza') || desc.includes('tamir') || desc.includes('onarım') ||
-            desc.includes('değişim') || desc.includes('bozuk')) {
-            return 'Arıza & Onarım';
-        }
-
-        // Default: Servis for service type, Belge for doc type
-        return item.type === 'service' ? 'Diğer Bakımlar' : 'Belgeler';
+        if (item.type === 'bill') return 'Faturalar';
+        if (item.type === 'warranty') return 'Garantiler/Eşyalar';
+        if (item.type === 'doc') return 'Resmi Evraklar';
+        return 'Diğer';
     };
 
     // Group records by category
@@ -75,7 +48,6 @@ export default function ReportPage() {
 
     // Calculate totals
     const totalCost = reportRecords.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
-    const recordsWithImages = reportRecords.filter(r => r.image).length;
 
     const processHistoryImages = async (originalHistory) => {
         const processed = await Promise.all(originalHistory.map(async (item) => {
@@ -112,8 +84,7 @@ export default function ReportPage() {
             const rows = items.map(item => `
                 <tr>
                     <td>${item.date}</td>
-                    <td>${item.description || '-'}</td>
-                    <td>${item.km || '-'}</td>
+                    <td>${item.description || item.subType || '-'}</td>
                     <td>${formatCurrency(item.cost)}</td>
                 </tr>
             `).join('');
@@ -125,8 +96,7 @@ export default function ReportPage() {
                         <thead>
                             <tr>
                                 <th>Tarih</th>
-                                <th>Açıklama</th>
-                                <th>KM</th>
+                                <th>Açıklama / Tür</th>
                                 <th>Tutar</th>
                             </tr>
                         </thead>
@@ -156,14 +126,14 @@ export default function ReportPage() {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <style>
                     body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
-                    h1 { color: #1d72d3; border-bottom: 2px solid #1d72d3; padding-bottom: 10px; font-size: 22px; }
+                    h1 { color: #F57C00; border-bottom: 2px solid #F57C00; padding-bottom: 10px; font-size: 22px; }
                     h2 { color: #333; font-size: 18px; margin-top: 30px; }
                     .header-info { margin-bottom: 30px; font-size: 14px; color: #555; background: #f8f9fa; padding: 15px; border-radius: 8px; }
-                    .summary-box { background: #1d72d3; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: center; }
+                    .summary-box { background: #F57C00; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: center; }
                     .summary-box h2 { color: white; margin: 0 0 5px 0; font-size: 14px; font-weight: normal; }
                     .summary-box .amount { font-size: 28px; font-weight: bold; }
                     .category-section { margin-bottom: 25px; }
-                    .category-section h3 { color: #1d72d3; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; display: flex; justify-content: space-between; }
+                    .category-section h3 { color: #F57C00; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; display: flex; justify-content: space-between; }
                     .category-total { color: #22c55e; font-size: 14px; }
                     table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
                     th, td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; font-size: 12px; }
@@ -176,16 +146,16 @@ export default function ReportPage() {
                 </style>
             </head>
             <body>
-                <h1>🚗 Araç Bakım Raporu</h1>
+                <h1>🏠 Ev Raporu</h1>
                 
                 <div class="header-info">
-                    <strong>Araç:</strong> ${carInfo.name}<br>
-                    <strong>Plaka:</strong> ${carInfo.plate}<br>
+                    <strong>Ev:</strong> ${homeInfo.name}<br>
+                    <strong>Adres:</strong> ${homeInfo.address}<br>
                     <strong>Rapor Tarihi:</strong> ${today}
                 </div>
 
                 <div class="summary-box">
-                    <h2>Toplam Harcama</h2>
+                    <h2>Toplam Harcama / Maliyet</h2>
                     <div class="amount">${formatCurrency(totalCostAll)}</div>
                 </div>
 
@@ -195,7 +165,7 @@ export default function ReportPage() {
                 ${imageSections ? `<h2>Ekli Belgeler</h2>` + imageSections : ''}
 
                 <div class="footer">
-                    Bu rapor Dijital Torpido uygulaması ile oluşturulmuştur.
+                    Bu rapor Dijital Çekmecem uygulaması ile oluşturulmuştur.
                 </div>
             </body>
             </html>
@@ -229,16 +199,16 @@ export default function ReportPage() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
                     <Icon source="arrow-left" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Bakım Raporu</Text>
+                <Text style={styles.headerTitle}>Ev Raporu</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.infoBox}>
                     <Icon source="file-chart" size={48} color={COLORS.primary} />
-                    <Text style={styles.infoTitle}>Bakım Raporu</Text>
+                    <Text style={styles.infoTitle}>Ev Raporu Oluştur</Text>
                     <Text style={styles.infoText}>
-                        Servis kayıtları, belgeler ve harcamalarınızı kategorilere ayrılmış şekilde PDF olarak dışa aktarın.
+                        Fatura, garanti ve evrak kayıtlarınızı PDF formatında raporlayın ve paylaşın.
                     </Text>
                 </View>
 
@@ -251,7 +221,7 @@ export default function ReportPage() {
                         </View>
                     ))}
                     {Object.keys(groupedRecords).length === 0 && (
-                        <Text style={styles.emptyText}>Henüz bakım/belge kaydı yok</Text>
+                        <Text style={styles.emptyText}>Henüz kayıt yok</Text>
                     )}
                 </View>
 
@@ -261,7 +231,7 @@ export default function ReportPage() {
                         <Text style={styles.statValue}>{reportRecords.length}</Text>
                     </View>
                     <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>Toplam Harcama</Text>
+                        <Text style={styles.statLabel}>Toplam Tutar</Text>
                         <Text style={[styles.statValue, { fontSize: 18 }]}>{formatCurrency(totalCost)}</Text>
                     </View>
                 </View>
@@ -274,6 +244,7 @@ export default function ReportPage() {
                     loading={loading}
                     disabled={loading || reportRecords.length === 0}
                     icon="share-variant"
+                    buttonColor={COLORS.primary}
                 >
                     PDF Oluştur ve Paylaş
                 </Button>
@@ -379,7 +350,6 @@ const styles = StyleSheet.create({
     },
     exportButton: {
         width: '100%',
-        backgroundColor: COLORS.primary,
         borderRadius: 8,
     },
 });

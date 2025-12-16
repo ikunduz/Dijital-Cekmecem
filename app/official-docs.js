@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const COLORS = {
-    primary: "#1d72d3",
+    primary: "#F57C00",
     background: "#E5E7EB",
     textDark: "#111417",
     textGray: "#647487",
@@ -18,13 +18,11 @@ export default function OfficialDocs() {
     const router = useRouter();
 
     const folders = [
-        { key: 'license', label: 'Ruhsat', icon: 'card-account-details', color: '#3b82f6' },
-        { key: 'kasko', label: 'Kasko', icon: 'shield-car', color: '#8b5cf6' },
-        { key: 'insurance', label: 'Trafik Sigortası', icon: 'shield-check', color: '#22c55e' },
-        { key: 'inspection', label: 'Muayene', icon: 'clipboard-check', color: '#f97316' },
-        { key: 'mtv', label: 'MTV', icon: 'cash-multiple', color: '#ef4444' },
-        { key: 'eksper', label: 'Eksper Raporu', icon: 'file-check', color: '#0ea5e9' },
-        { key: 'accident', label: 'Kaza/Hasar Belgeleri', icon: 'car-emergency', color: '#f43f5e' },
+        { key: 'deed', label: 'Tapu', icon: 'home-city', color: '#3b82f6' },
+        { key: 'contract', label: 'Kira Kontratı', icon: 'file-sign', color: '#8b5cf6' },
+        { key: 'dask', label: 'DASK', icon: 'shield-home', color: '#22c55e' },
+        { key: 'insurance', label: 'Konut Sigortası', icon: 'shield-check', color: '#f97316' },
+        { key: 'id', label: 'Kimlik / Pasaport', icon: 'card-account-details', color: '#ef4444' },
         { key: 'other', label: 'Diğer Belgeler', icon: 'folder-file', color: '#6b7280' },
     ];
 
@@ -36,7 +34,7 @@ export default function OfficialDocs() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Resmi Belgeler</Text>
+                <Text style={styles.headerTitle}>Resmi Evraklar</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -52,7 +50,7 @@ export default function OfficialDocs() {
                             style={styles.cardWrapper}
                             onPress={() => router.push({
                                 pathname: '/folder-detail',
-                                params: { category: folder.label, subType: folder.key }
+                                params: { category: 'Resmi Evraklar', subType: folder.key }
                             })}
                             activeOpacity={0.7}
                         >
@@ -125,6 +123,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         minHeight: 100,
         justifyContent: 'center',
+        marginBottom: 12
     },
     iconCircle: {
         width: 48,

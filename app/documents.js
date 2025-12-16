@@ -5,46 +5,45 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// --- COLORS (Improved Palette) ---
+// --- COLORS (Home Theme) ---
 const COLORS = {
-  primary: "#1d72d3",
-  background: "#E5E7EB",  // Slightly darker gray
+  primary: "#F57C00",
+  background: "#E5E7EB",
   textDark: "#111417",
   textGray: "#647487",
   white: "#FFFFFF",
   // Category Colors
-  fuel: "#3b82f6",      // Blue
-  service: "#f97316",   // Orange  
+  bill: "#3b82f6",      // Blue
+  warranty: "#8b5cf6",   // Purple
   documents: "#22c55e", // Green
 };
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
-export default function Kayitlarim({ navigation }) {
+export default function Documents({ navigation }) {
   const router = useRouter();
 
   // --- CATEGORY CARDS ---
   const categories = [
     {
-      title: "Yakıt Kayıtları",
-      subtitle: "Tüm yakıt alımları",
-      icon: "gas-station",
-      color: COLORS.fuel,
-      route: '/fuel-history'
+      title: "Faturalar",
+      subtitle: "Elektrik, Su, Doğalgaz...",
+      icon: "receipt",
+      color: COLORS.bill,
+      route: '/bill-history'
     },
     {
-      title: "Servis / Bakım",
-      subtitle: "Bakım ve onarım işlemleri",
-      icon: "wrench",
-      color: COLORS.service,
-      route: '/history'
+      title: "Garantiler",
+      subtitle: "Eşya ve ürün garantileri",
+      icon: "shield-check",
+      color: COLORS.warranty,
+      // Pass params for folder-detail
+      route: '/folder-detail?category=Garantiler'
     },
     {
-      title: "Resmi Belgeler",
-      subtitle: "Sigorta, kasko, ruhsat...",
+      title: "Resmi Evraklar",
+      subtitle: "Tapu, Kira, DASK...",
       icon: "file-document",
       color: COLORS.documents,
-      route: '/official-docs'
+      route: '/folder-detail?category=Resmi Evraklar'
     },
   ];
 
@@ -70,7 +69,7 @@ export default function Kayitlarim({ navigation }) {
 
         {/* INTRO TEXT */}
         <Text style={styles.introText}>
-          Tüm kayıtlarına buradan ulaşabilirsin
+          Tüm evrak ve kayıtlarına buradan ulaşabilirsin
         </Text>
 
         {/* CATEGORY CARDS */}
@@ -79,7 +78,15 @@ export default function Kayitlarim({ navigation }) {
             <TouchableOpacity
               key={index}
               style={styles.cardWrapper}
-              onPress={() => router.push(category.route)}
+              onPress={() => {
+                if (category.route.includes('?')) {
+                  const [pathname, query] = category.route.split('?');
+                  const params = Object.fromEntries(new URLSearchParams(query));
+                  router.push({ pathname, params });
+                } else {
+                  router.push(category.route);
+                }
+              }}
               activeOpacity={0.7}
             >
               <Surface style={styles.card} elevation={3}>
@@ -118,7 +125,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  // HEADER
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -138,20 +144,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textDark,
   },
-
   scrollContent: {
     padding: 20,
   },
-
-  // INTRO
   introText: {
     fontSize: 15,
     color: COLORS.textGray,
     marginBottom: 24,
     textAlign: 'center',
   },
-
-  // CARDS
   cardsContainer: {
     gap: 16,
   },
