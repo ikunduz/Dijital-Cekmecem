@@ -123,7 +123,6 @@ export default function AddRecord() {
             return;
         }
         let result = await ImagePicker.launchCameraAsync({
-            mediaTypes: 'Images',
             allowsEditing: true,
             quality: 0.5,
         });
@@ -135,7 +134,6 @@ export default function AddRecord() {
 
     const openGallery = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: 'Images',
             allowsEditing: true,
             quality: 0.5,
         });

@@ -39,6 +39,22 @@ export const HomeProvider = ({ children }) => {
             const historyJson = await AsyncStorage.getItem('@home_history');
             let loadedHistory = historyJson ? JSON.parse(historyJson) : [];
 
+            // AUTO-CREATE DEFAULT HOME if none exist
+            if (loadedHomes.length === 0) {
+                const defaultHome = {
+                    id: Date.now(),
+                    title: 'Evim',
+                    address: '',
+                    ownerName: '',
+                    daskNumber: '',
+                    internetNumber: '',
+                    homeImage: null,
+                    themeColor: 'orange',
+                };
+                loadedHomes = [defaultHome];
+                await AsyncStorage.setItem('@home_homes', JSON.stringify(loadedHomes));
+            }
+
             setHomes(loadedHomes);
             setAllHistory(loadedHistory);
 
@@ -48,6 +64,7 @@ export const HomeProvider = ({ children }) => {
                 setCurrentHomeId(JSON.parse(selectedIdJson));
             } else if (loadedHomes.length > 0) {
                 setCurrentHomeId(loadedHomes[0].id);
+                await AsyncStorage.setItem('@home_selected_id', JSON.stringify(loadedHomes[0].id));
             }
 
         } catch (e) {

@@ -53,7 +53,6 @@ export default function Settings() {
     const pickHomeImage = async () => {
         try {
             let result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: 'Images',
                 allowsEditing: true,
                 aspect: [16, 9],
                 quality: 0.7,

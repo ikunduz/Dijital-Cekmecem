@@ -1,12 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { ProgressBar, FAB, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useHomeContext } from '../context/HomeContext';
-import * as ImagePicker from 'expo-image-picker';
 
 // Improved Color Palette
 const COLORS = {
@@ -26,8 +25,13 @@ const COLORS = {
 export default function Dashboard() {
   const navigation = useNavigation();
   const router = useRouter();
-  const { history, homeProfile, updateHomeProfile } = useHomeContext();
+  const { history, homeProfile } = useHomeContext();
   const [imageError, setImageError] = useState(false);
+
+  // Sync imageError reset when homeProfile changes
+  useEffect(() => {
+    setImageError(false);
+  }, [homeProfile?.homeImage]);
 
   // --- HOME DATA ---
   const homeData = {
@@ -40,24 +44,11 @@ export default function Dashboard() {
     navigation.dispatch(DrawerActions.openDrawer());
   };
 
-  const pickHomeImage = async () => {
-    try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'Images',
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.7,
-      });
-
-      if (!result.canceled) {
-        const uri = result.assets[0].uri;
-        await updateHomeProfile({ homeImage: uri });
-      }
-    } catch (error) {
-      console.error('Pick home image error:', error);
-      Alert.alert("Hata", "Fotoğraf seçilirken bir hata oluştu: " + error.message);
-    }
+  const goToSettings = () => {
+    router.push('/settings');
   };
+
+
 
   const parseDate = (dateStr) => {
     if (!dateStr) return new Date(0);
@@ -210,7 +201,7 @@ export default function Dashboard() {
         <View style={styles.cardContainer}>
           <View style={styles.card}>
             {/* Ev Fotosu */}
-            <TouchableOpacity onPress={pickHomeImage} activeOpacity={0.9}>
+            <TouchableOpacity onPress={goToSettings} activeOpacity={0.9}>
               {(!homeData.image || imageError) ? (
                 <View style={[styles.cardImage, { backgroundColor: '#f5f5f5', alignItems: 'center', justifyContent: 'center' }]}>
                   <MaterialCommunityIcons name="home" size={100} color="#e0e0e0" />
