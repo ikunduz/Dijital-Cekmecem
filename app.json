@@ -12,8 +12,8 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,9 +21,6 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
     }
   }
 }
