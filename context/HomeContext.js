@@ -10,6 +10,7 @@ export const HomeProvider = ({ children }) => {
     const [homes, setHomes] = useState([]); // Array of home profiles
     const [currentHomeId, setCurrentHomeId] = useState(null); // ID of selected home
     const [allHistory, setAllHistory] = useState([]); // All records across all homes
+    const [xp, setXp] = useState(0); // Career XP for gamification
     const [loading, setLoading] = useState(true);
 
     // --- DERIVED STATE ---
@@ -38,6 +39,10 @@ export const HomeProvider = ({ children }) => {
             // Load history
             const historyJson = await AsyncStorage.getItem('@home_history');
             let loadedHistory = historyJson ? JSON.parse(historyJson) : [];
+
+            // Load XP
+            const xpJson = await AsyncStorage.getItem('@home_xp');
+            setXp(xpJson ? JSON.parse(xpJson) : 0);
 
             // AUTO-CREATE DEFAULT HOME if none exist
             if (loadedHomes.length === 0) {
@@ -88,6 +93,14 @@ export const HomeProvider = ({ children }) => {
             await AsyncStorage.setItem('@home_history', JSON.stringify(newHistory));
         } catch (e) {
             console.error("Failed to save history", e);
+        }
+    };
+
+    const saveXp = async (newXp) => {
+        try {
+            await AsyncStorage.setItem('@home_xp', JSON.stringify(newXp));
+        } catch (e) {
+            console.error("Failed to save XP", e);
         }
     };
 
@@ -149,6 +162,12 @@ export const HomeProvider = ({ children }) => {
     };
 
     // --- RECORD ACTIONS ---
+    const addXP = async (amount) => {
+        const newXp = xp + amount;
+        setXp(newXp);
+        await saveXp(newXp);
+    };
+
     const addRecord = async (record) => {
         if (!currentHomeId) {
             console.error("No home selected, cannot add record");
@@ -158,6 +177,9 @@ export const HomeProvider = ({ children }) => {
         const newHistory = [newRecord, ...allHistory];
         setAllHistory(newHistory);
         await saveHistory(newHistory);
+
+        // Add XP for creating a record
+        await addXP(10);
     };
 
     const editRecord = async (id, updatedRecord) => {
@@ -192,7 +214,10 @@ export const HomeProvider = ({ children }) => {
             editRecord,
             deleteRecord,
             // Loading state
-            loading
+            loading,
+            // Gamification
+            xp,
+            addXP
         }}>
             {children}
         </HomeContext.Provider>

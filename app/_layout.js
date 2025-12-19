@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, usePathname } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { HomeProvider, useHomeContext } from '../context/HomeContext';
+import { FinanceProvider } from '../context/FinanceContext';
 
 const COLORS = {
   primary: "#F57C00", // Home Warmth Orange
@@ -81,6 +82,16 @@ function CustomDrawerContent(props) {
               onPress={() => router.push('/select-home')}
             />
           )}
+          <MenuRow
+            title="Bütçem"
+            icon="account-balance-wallet"
+            onPress={() => router.push('/budget')}
+          />
+          <MenuRow
+            title="Birikim"
+            icon="savings"
+            onPress={() => router.push('/savings')}
+          />
         </View>
 
       </DrawerContentScrollView>
@@ -104,27 +115,32 @@ function CustomDrawerContent(props) {
 export default function Layout() {
   return (
     <HomeProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Drawer
-          drawerContent={(props) => <CustomDrawerContent {...props} />}
-          backBehavior="history"
-          screenOptions={{
-            headerShown: false,
-            drawerStyle: { width: '80%' },
-          }}
-        >
-          <Drawer.Screen name="index" />
-          <Drawer.Screen name="history" />
-          <Drawer.Screen name="documents" />
-          <Drawer.Screen name="add-record" />
-          <Drawer.Screen name="folder-detail" />
-          <Drawer.Screen name="official-docs" />
-          <Drawer.Screen name="bill-history" />
-          <Drawer.Screen name="settings" />
-          <Drawer.Screen name="select-home" />
-          <Drawer.Screen name="add-home" />
-        </Drawer>
-      </GestureHandlerRootView>
+      <FinanceProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Drawer
+            drawerContent={(props) => <CustomDrawerContent {...props} />}
+            backBehavior="history"
+            screenOptions={{
+              headerShown: false,
+              drawerStyle: { width: '80%' },
+            }}
+          >
+            <Drawer.Screen name="index" />
+            <Drawer.Screen name="history" />
+            <Drawer.Screen name="documents" />
+            <Drawer.Screen name="add-record" />
+            <Drawer.Screen name="folder-detail" />
+            <Drawer.Screen name="official-docs" />
+            <Drawer.Screen name="bill-history" />
+            <Drawer.Screen name="settings" />
+            <Drawer.Screen name="select-home" />
+            <Drawer.Screen name="add-home" />
+            <Drawer.Screen name="budget" />
+            <Drawer.Screen name="add-transaction" />
+            <Drawer.Screen name="savings" />
+          </Drawer>
+        </GestureHandlerRootView>
+      </FinanceProvider>
     </HomeProvider>
   );
 }

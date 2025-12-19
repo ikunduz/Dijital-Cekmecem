@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-export default function DrawerGrid({ stats }) {
+export default function DrawerGrid({ stats, financeStats }) {
     const router = useRouter();
 
     const drawers = [
@@ -38,6 +38,22 @@ export default function DrawerGrid({ stats }) {
             color: '#10b981', // Emerald
             info: stats.docInfo || 'Tamam',
             route: '/documents'
+        },
+        {
+            id: 'budget',
+            title: 'Bütçem',
+            icon: 'wallet',
+            color: '#f59e0b', // Amber/Orange
+            info: financeStats?.balance !== undefined ? `${financeStats.balance > 0 ? '+' : ''}${financeStats.balance} ₺` : 'Hesaplanıyor',
+            route: '/budget'
+        },
+        {
+            id: 'savings',
+            title: 'Birikim',
+            icon: 'piggy-bank',
+            color: '#ec4899', // Pink
+            info: financeStats?.savingsProgress !== undefined ? `%${financeStats.savingsProgress} Tamamlandı` : 'Hedef Yok',
+            route: '/savings'
         }
     ];
 

@@ -10,8 +10,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 
 import { useHomeContext } from '../context/HomeContext';
+import { useFinanceContext } from '../context/FinanceContext';
 import HealthRing from '../components/HealthRing';
 import DrawerGrid from '../components/DrawerGrid';
+import HomeMoodBubble from '../components/HomeMoodBubble';
 import { getSeasonalTip, analyzeBillTrends } from '../utils/smartLogic';
 
 const COLORS = {
@@ -28,7 +30,7 @@ const COLORS = {
 export default function Dashboard() {
   const navigation = useNavigation();
   const router = useRouter();
-  const { history, homeProfile } = useHomeContext();
+  const { history, homeProfile, xp } = useHomeContext();
   const [refreshing, setRefreshing] = useState(false);
 
   // --- 1. GREETING LOGIC ---
@@ -129,6 +131,72 @@ export default function Dashboard() {
     return getSeasonalTip();
   }, [history]);
 
+  // --- 4. FINANCE LOGIC ---
+  const { getMonthlyStats, savingsGoals } = useFinanceContext();
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const financeStats = useMemo(() => {
+    const fStats = getMonthlyStats(homeProfile?.id, currentMonth, currentYear);
+
+    // Calculate overall savings progress
+    let savingsProgress = 0;
+    if (savingsGoals.length > 0) {
+      const totalProgress = savingsGoals.reduce((sum, goal) => {
+        const prog = goal.targetAmount > 0 ? (goal.currentAmount || 0) / goal.targetAmount : 0;
+        return sum + prog;
+      }, 0);
+      savingsProgress = Math.round((totalProgress / savingsGoals.length) * 100);
+    }
+
+    return {
+      balance: fStats.balance,
+      savingsProgress: savingsProgress
+    };
+  }, [getMonthlyStats, homeProfile, currentMonth, currentYear, savingsGoals]);
+
+  // --- 5. REFINED HEALTH SCORE (Including Finance) ---
+  const finalHealthScore = useMemo(() => {
+    let score = healthScore;
+    if (financeStats.balance < 0) {
+      // Penalty for debt: -1 point for every 100 TL debt, max -30
+      const penalty = Math.min(30, Math.floor(Math.abs(financeStats.balance) / 100));
+      score -= penalty;
+    }
+    return Math.max(0, score);
+  }, [healthScore, financeStats.balance]);
+
+  // --- 6. GAMIFICATION LOGIC (EV RUHU) ---
+  const { level, rank, mood } = useMemo(() => {
+    // A. Level Calculation
+    const currentLevel = Math.floor((xp || 0) / 100) + 1;
+
+    // B. Rank Calculation
+    let currentRank = { title: 'Girdizgah', color: COLORS.textGray };
+    if (finalHealthScore >= 90) currentRank = { title: 'Huzurlu Saray 🏰', color: COLORS.success };
+    else if (finalHealthScore >= 75) currentRank = { title: 'Düzenli Yuva 🏡', color: COLORS.primary };
+    else if (finalHealthScore >= 50) currentRank = { title: 'Gelişen Ev 🏗️', color: COLORS.warning };
+    else currentRank = { title: 'Kaos Mağarası 🏚️', color: COLORS.danger };
+
+    // C. Mood Logic
+    let currentMood = { message: "Harika görünüyoruz!", icon: 'emoticon-happy-outline', color: COLORS.success };
+
+    if (issues.length > 0) {
+      currentMood = { message: "Biraz ilgiye ihtiyacım var...", icon: 'emoticon-neutral-outline', color: COLORS.warning };
+    }
+    if (financeStats.balance < 0) {
+      currentMood = { message: "Cüzdanımız biraz zayıflamış mı?", icon: 'wallet-giftcard', color: COLORS.danger };
+    }
+    if (financeStats.savingsProgress > 50) {
+      currentMood = { message: "Birikimler uçuyor, harikasın!", icon: 'rocket-launch', color: COLORS.primary };
+    }
+    if (finalHealthScore < 40) {
+      currentMood = { message: "Acil müdahale lazım!", icon: 'alert-decagram', color: COLORS.danger };
+    }
+
+    return { level: currentLevel, rank: currentRank, mood: currentMood };
+  }, [xp, finalHealthScore, issues, financeStats]);
+
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -175,28 +243,65 @@ export default function Dashboard() {
         {/* --- 2. PULSE SECTION (Score) --- */}
         <View style={styles.pulseSection}>
           <View style={styles.ringContainer}>
-            <HealthRing score={healthScore} size={160} />
+            <HealthRing score={finalHealthScore} size={160} />
+            <HomeMoodBubble mood={mood} />
+
+            <View style={styles.rankBadge}>
+              <Text style={[styles.rankText, { color: rank.color }]}>{rank.title}</Text>
+            </View>
+
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelText}>Lvl {level}</Text>
+            </View>
           </View>
           <View style={styles.pulseMessage}>
-            {issues.length === 0 ? (
+            {finalHealthScore >= 90 ? (
               <View style={styles.statusBadgeSuccess}>
                 <MaterialCommunityIcons name="check-circle" size={16} color="white" />
                 <Text style={styles.statusText}>Evinizin durumu harika!</Text>
               </View>
+            ) : finalHealthScore >= 70 ? (
+              <View style={styles.statusBadgeWarning}>
+                <MaterialCommunityIcons name="alert-circle" size={16} color="white" />
+                <Text style={styles.statusText}>Bazı konular ilgi bekliyor.</Text>
+              </View>
             ) : (
               <View style={styles.statusBadgeDanger}>
                 <MaterialCommunityIcons name="alert-circle" size={16} color="white" />
-                <Text style={styles.statusText}>{issues[0]}</Text>
+                <Text style={styles.statusText}>Acil müdahale gerekiyor!</Text>
               </View>
             )}
           </View>
         </View>
 
-        {/* --- 3. DRAWERS (Categories) --- */}
+        {/* --- 3. FINANCE SUMMARY CARD --- */}
+        <View style={styles.financeSummaryContainer}>
+          <TouchableOpacity
+            style={styles.financeSummaryCard}
+            onPress={() => router.push('/budget')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.financeIconContainer}>
+              <MaterialCommunityIcons name="wallet-outline" size={24} color={COLORS.primary} />
+            </View>
+            <View style={styles.financeTextContainer}>
+              <Text style={styles.financeLabel}>Aylık Bakiye</Text>
+              <Text style={[
+                styles.financeValue,
+                { color: financeStats.balance >= 0 ? COLORS.success : COLORS.danger }
+              ]}>
+                {financeStats.balance >= 0 ? '+' : ''}{financeStats.balance} ₺
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.textGray} />
+          </TouchableOpacity>
+        </View>
+
+        {/* --- 4. DRAWERS (Categories) --- */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Çekmeceler</Text>
         </View>
-        <DrawerGrid stats={stats} />
+        <DrawerGrid stats={stats} financeStats={financeStats} />
 
         {/* --- 4. SMART INSIGHTS WIDGET --- */}
         <View style={styles.widgetContainer}>
@@ -289,19 +394,22 @@ const styles = StyleSheet.create({
   },
   pulseSection: {
     alignItems: 'center',
+    marginTop: 40, // Added margin to give room for top-satellites
     marginBottom: 24,
     zIndex: 20,
-    elevation: 20, // High elevation for Android to float over Header
+    elevation: 20,
+    overflow: 'visible',
   },
   ringContainer: {
     backgroundColor: 'white',
     borderRadius: 100,
     padding: 10,
-    elevation: 25, // Even higher to be on top of pulseSection
+    elevation: 25,
     shadowColor: '#F57C00',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 16,
+    overflow: 'visible', // CRITICAL for satellites
   },
   pulseMessage: {
     marginTop: 16,
@@ -310,6 +418,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#22c55e',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  statusBadgeWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f59e0b',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -381,5 +498,79 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: COLORS.primary,
     borderRadius: 16,
+  },
+  financeSummaryContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  financeSummaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  financeIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  financeTextContainer: {
+    flex: 1,
+  },
+  financeLabel: {
+    fontSize: 12,
+    color: COLORS.textGray,
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  financeValue: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  rankBadge: {
+    position: 'absolute',
+    top: -10,
+    left: -40,
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    zIndex: 110,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  rankText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  levelBadge: {
+    position: 'absolute',
+    bottom: -10,
+    backgroundColor: '#334155',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  levelText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
