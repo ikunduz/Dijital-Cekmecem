@@ -40,10 +40,10 @@ export const getSeasonalTip = () => {
     };
 };
 
-export const analyzeBillTrends = (history) => {
-    // Filter bills and sort by date descending
-    const bills = history
-        .filter(h => h.type === 'bill')
+export const analyzeBillTrends = (transactions) => {
+    // Filter transactions by category 'bill'
+    const bills = transactions
+        .filter(t => t.category === 'bill')
         .sort((a, b) => {
             // Parse dates DD.MM.YYYY
             const parse = (d) => {

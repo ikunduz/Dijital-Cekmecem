@@ -48,17 +48,17 @@ export default function Dashboard() {
     const now = new Date();
 
     // -- A. BILLS (Faturalar) --
-    // Check if last bill > 45 days
-    const bills = history.filter(h => h.type === 'bill');
+    // Check if last bill > 45 days (Now looking at Finance transactions)
+    const bills = (transactions || []).filter(t => t.category === 'bill');
     if (bills.length > 0) {
       // Find latest bill date
-      // Date format is likely DD.MM.YYYY based on previous files, let's parse safely
       const parse = (d) => {
+        if (!d) return new Date(0);
         const parts = d.split('.');
         return new Date(parts[2], parts[1] - 1, parts[0]);
       };
-      bills.sort((a, b) => parse(b.date) - parse(a.date));
-      const lastBill = bills[0];
+      const sortedBills = [...bills].sort((a, b) => parse(b.date) - parse(a.date));
+      const lastBill = sortedBills[0];
       const diffDays = (now - parse(lastBill.date)) / (1000 * 60 * 60 * 24);
 
       if (diffDays > 45) {
@@ -66,7 +66,13 @@ export default function Dashboard() {
         foundIssues.push("Fatura gecikmesi olabilir");
       }
     }
-    const lastBillAmount = bills.length > 0 ? `${bills[0].cost} TL` : 'Veri Yok';
+    const lastBillAmount = bills.length > 0 ? `${[...bills].sort((a, b) => {
+      const parse = (d) => {
+        const parts = d.split('.');
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+      };
+      return parse(b.date) - parse(a.date);
+    })[0].amount} TL` : 'Veri Yok';
 
     // -- B. WARRANTIES (Garantiler) --
     const warranties = history.filter(h => h.type === 'warranty');
@@ -115,24 +121,24 @@ export default function Dashboard() {
       stats: {
         billInfo: `Son: ${lastBillAmount}`,
         warrantyInfo: expiredWarranties > 0 ? `${expiredWarranties} Süresi Dolan` : 'Her şey yolunda',
-        maintenanceInfo: '3 ay önce', // Mock for now or calculate from 'service' type
+        maintenanceInfo: '3 ay önce',
         docInfo: expiredDocs > 0 ? 'Yenileme Gerekli' : 'Tüm evraklar tam'
       }
     };
-  }, [history]);
+  }, [history, transactions]);
 
   // --- 3. SMART INSIGHTS LOGIC ---
   const insight = useMemo(() => {
     // 1. Check for Bill Anomalies first (High Priority)
-    const billInsight = analyzeBillTrends(history);
+    const billInsight = analyzeBillTrends(transactions || []);
     if (billInsight) return billInsight;
 
     // 2. Fallback to Seasonal Tips
     return getSeasonalTip();
-  }, [history]);
+  }, [transactions]);
 
   // --- 4. FINANCE LOGIC ---
-  const { getMonthlyStats, savingsGoals } = useFinanceContext();
+  const { transactions, getMonthlyStats, savingsGoals } = useFinanceContext();
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 

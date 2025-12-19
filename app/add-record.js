@@ -21,8 +21,8 @@ export default function AddRecord() {
     const { recordId } = useLocalSearchParams();
     const { addRecord, editRecord, history, homeProfile } = useHomeContext();
 
-    // Types: 'bill' (Fatura), 'warranty' (Garanti/Eşya), 'doc' (Belge)
-    const [recordType, setRecordType] = useState('bill');
+    // Types: 'warranty' (Garanti/Eşya), 'doc' (Belge)
+    const [recordType, setRecordType] = useState('warranty');
     const [subType, setSubType] = useState('');
 
     // Form State
@@ -82,9 +82,8 @@ export default function AddRecord() {
     }, [recordType]);
 
     const types = [
-        { key: 'bill', label: 'Fatura', icon: 'receipt' },
         { key: 'warranty', label: 'Garanti/Eşya', icon: 'shield-check' },
-        { key: 'doc', label: 'Belge', icon: 'file-document' },
+        { key: 'doc', label: 'Belge/Evrak', icon: 'file-document' },
     ];
 
     const pickImage = async () => {
@@ -169,8 +168,7 @@ export default function AddRecord() {
         { key: 'other', label: 'Diğer' },
     ];
 
-    const currentSubtypes = recordType === 'bill' ? billSubtypes :
-        recordType === 'warranty' ? warrantySubtypes : docSubtypes;
+    const currentSubtypes = recordType === 'warranty' ? warrantySubtypes : docSubtypes;
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>

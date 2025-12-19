@@ -16,6 +16,9 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { Icon } from 'react-native-paper';
 
 import { useHomeContext } from '../context/HomeContext';
 import { useFinanceContext, INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../context/FinanceContext';
@@ -42,6 +45,8 @@ export default function AddTransactionScreen() {
     const [description, setDescription] = useState('');
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [imageUri, setImageUri] = useState(null);
+    const [isPdf, setIsPdf] = useState(false);
     const [saving, setSaving] = useState(false);
 
     const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -57,6 +62,62 @@ export default function AddTransactionScreen() {
         setShowDatePicker(false);
         if (selectedDate) {
             setDate(selectedDate);
+        }
+    };
+
+    const pickAttachment = async () => {
+        Alert.alert(
+            "Belge/Fiş Ekle",
+            "Nasıl eklemek istersiniz?",
+            [
+                { text: "Kamera", onPress: openCamera },
+                { text: "Galeri", onPress: openGallery },
+                { text: "PDF Dosya", onPress: pickDocument },
+                { text: "İptal", style: "cancel" }
+            ]
+        );
+    };
+
+    const pickDocument = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'application/pdf',
+                copyToCacheDirectory: true,
+            });
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                setImageUri(result.assets[0].uri);
+                setIsPdf(true);
+            }
+        } catch (error) {
+            console.error('Document picker error:', error);
+            Alert.alert("Hata", "PDF seçilirken bir hata oluştu.");
+        }
+    };
+
+    const openCamera = async () => {
+        const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+        if (permissionResult.granted === false) {
+            Alert.alert("İzin Gerekli", "Kamera erişimi için izin vermeniz gerekiyor.");
+            return;
+        }
+        let result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            quality: 0.5,
+        });
+        if (!result.canceled) {
+            setImageUri(result.assets[0].uri);
+            setIsPdf(false);
+        }
+    };
+
+    const openGallery = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            quality: 0.5,
+        });
+        if (!result.canceled) {
+            setImageUri(result.assets[0].uri);
+            setIsPdf(false);
         }
     };
 
@@ -80,6 +141,8 @@ export default function AddTransactionScreen() {
                 amount: parseFloat(amount),
                 description: description.trim(),
                 date: formatDate(date),
+                attachment: imageUri,
+                isPdf: isPdf,
             }, currentHomeId);
 
             router.back();
@@ -246,6 +309,34 @@ export default function AddTransactionScreen() {
                             multiline
                         />
                     </View>
+
+                    {/* ATTACHMENT */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Fiş / Belge (Opsiyonel)</Text>
+                        {imageUri ? (
+                            <View style={styles.attachmentPreview}>
+                                {isPdf ? (
+                                    <View style={styles.pdfBadge}>
+                                        <MaterialCommunityIcons name="file-pdf-box" size={40} color="#ef4444" />
+                                        <Text style={styles.attachmentText}>PDF Eklendi</Text>
+                                    </View>
+                                ) : (
+                                    <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="cover" />
+                                )}
+                                <TouchableOpacity
+                                    style={styles.removeAttachment}
+                                    onPress={() => { setImageUri(null); setIsPdf(false); }}
+                                >
+                                    <MaterialCommunityIcons name="close-circle" size={24} color="white" />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <TouchableOpacity style={styles.attachButton} onPress={pickAttachment}>
+                                <MaterialCommunityIcons name="camera-plus" size={24} color={COLORS.textGray} />
+                                <Text style={styles.attachButtonText}>Fotoğraf veya Belge Ekle</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </View>
@@ -404,5 +495,55 @@ const styles = StyleSheet.create({
         color: COLORS.textDark,
         minHeight: 80,
         textAlignVertical: 'top',
+        marginBottom: 8,
     },
+    attachButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: COLORS.white,
+        borderRadius: 12,
+        padding: 16,
+        gap: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderStyle: 'dashed',
+    },
+    attachButtonText: {
+        fontSize: 14,
+        color: COLORS.textGray,
+        fontWeight: '500',
+    },
+    attachmentPreview: {
+        height: 120,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: COLORS.white,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        position: 'relative',
+    },
+    previewImage: {
+        width: '100%',
+        height: '100%',
+    },
+    pdfBadge: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+    },
+    attachmentText: {
+        fontSize: 14,
+        color: COLORS.textDark,
+        fontWeight: '600',
+    },
+    removeAttachment: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        borderRadius: 12,
+    }
 });

@@ -16,11 +16,13 @@ export const INCOME_CATEGORIES = [
 ];
 
 export const EXPENSE_CATEGORIES = [
-    { id: 'market', label: 'Market', icon: 'cart', color: '#ef4444' },
-    { id: 'food', label: 'Yeme-İçme', icon: 'coffee', color: '#f97316' },
-    { id: 'entertainment', label: 'Eğlence', icon: 'movie', color: '#ec4899' },
-    { id: 'transport', label: 'Ulaşım', icon: 'car', color: '#8b5cf6' },
-    { id: 'clothing', label: 'Giyim', icon: 'shopping', color: '#06b6d4' },
+    { id: 'bill', label: 'Fatura', icon: 'receipt', color: '#f59e0b' },
+    { id: 'aidat', label: 'Aidat', icon: 'home-city', color: '#6366f1' },
+    { id: 'rent', label: 'Kira/Kredi', icon: 'home-key', color: '#8b5cf6' },
+    { id: 'allowance', label: 'Harçlık', icon: 'account-child', color: '#ec4899' },
+    { id: 'market', label: 'Market/Mutfak', icon: 'cart', color: '#ef4444' },
+    { id: 'food', label: 'Dışarıda Yemek', icon: 'coffee', color: '#f97316' },
+    { id: 'transport', label: 'Ulaşım', icon: 'car', color: '#3b82f6' },
     { id: 'health', label: 'Sağlık', icon: 'heart', color: '#10b981' },
     { id: 'education', label: 'Eğitim', icon: 'book', color: '#3b82f6' },
     { id: 'other_expense', label: 'Diğer', icon: 'dots-horizontal', color: '#6b7280' },

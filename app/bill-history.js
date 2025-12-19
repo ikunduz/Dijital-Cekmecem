@@ -4,6 +4,7 @@ import { Icon, IconButton, Divider } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useHomeContext } from '../context/HomeContext';
+import { useFinanceContext } from '../context/FinanceContext';
 
 const COLORS = {
     primary: "#F57C00",
@@ -38,13 +39,31 @@ const SUBTYPE_LABELS = {
 export default function BillHistory() {
     const router = useRouter();
     const { history } = useHomeContext();
+    const { transactions } = useFinanceContext();
 
     // Filter and sort bill records
     const billRecords = useMemo(() => {
-        return history
-            .filter(r => r.type === 'bill')
-            .sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Newest first
-    }, [history]);
+        // 1. Get legacy bills from HomeContext history (type: 'bill')
+        const legacyBills = history.filter(r => r.type === 'bill');
+
+        // 2. Get new bills from FinanceContext transactions (category: 'bill')
+        const financeBills = (transactions || [])
+            .filter(t => t.category === 'bill')
+            .map(t => ({
+                id: t.id,
+                type: 'bill',
+                subType: 'other', // Default or map if we add bill categories later
+                date: t.date,
+                cost: t.amount,
+                description: t.description,
+                image: t.attachment,
+                isFinance: true // Flag to distinguish
+            }));
+
+        const combined = [...legacyBills, ...financeBills];
+
+        return combined.sort((a, b) => parseDate(b.date) - parseDate(a.date)); // Newest first
+    }, [history, transactions]);
 
     // Calculate totals
     const totals = useMemo(() => {
@@ -101,7 +120,13 @@ export default function BillHistory() {
                             <React.Fragment key={record.id}>
                                 <TouchableOpacity
                                     style={styles.listItem}
-                                    onPress={() => router.push({ pathname: '/add-record', params: { recordId: record.id } })}
+                                    onPress={() => {
+                                        if (record.isFinance) {
+                                            router.push('/budget'); // Go to budget for finance bills for now
+                                        } else {
+                                            router.push({ pathname: '/add-record', params: { recordId: record.id } });
+                                        }
+                                    }}
                                 >
                                     <View style={styles.iconColumn}>
                                         <Icon source={getIcon(record.subType)} size={24} color={COLORS.primary} />
