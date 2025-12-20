@@ -172,7 +172,6 @@ export default function AddHome() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.white,
     },
     header: {
         flexDirection: 'row',
@@ -181,12 +180,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     closeButton: {
         padding: 8,
@@ -203,11 +200,9 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: COLORS.textGray,
         marginBottom: 8,
     },
     input: {
-        backgroundColor: COLORS.white,
     },
     saveButton: {
         borderRadius: 8,
@@ -218,7 +213,6 @@ const styles = StyleSheet.create({
         height: 180,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: COLORS.background,
     },
     homeImage: {
         width: '100%',
@@ -230,12 +224,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 2,
         borderStyle: 'dashed',
-        borderColor: COLORS.border,
         borderRadius: 12,
     },
     placeholderText: {
         marginTop: 8,
         fontSize: 14,
-        color: COLORS.textGray,
     },
 });

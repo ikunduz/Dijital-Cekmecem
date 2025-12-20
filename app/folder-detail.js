@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Modal, ScrollView, Alert, Platform } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -7,21 +7,15 @@ import { useHomeContext } from '../context/HomeContext';
 import * as Sharing from 'expo-sharing';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as FileSystem from 'expo-file-system/legacy';
-import { Platform } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAppColors } from '../utils/theme';
 
-const COLORS = {
-    primary: "#F57C00",
-    background: "#E5E7EB",
-    textDark: "#111417",
-    textGray: "#647487",
-    white: "#FFFFFF",
-    border: "#e5e7eb",
-    danger: "#ef4444",
-};
+
 
 export default function FolderDetail() {
     const router = useRouter();
-    const { category, subType } = useLocalSearchParams();
+    const COLORS = useAppColors();
+    const { category, subType, searchId } = useLocalSearchParams();
     const { history, deleteRecord } = useHomeContext();
     const [previewItem, setPreviewItem] = React.useState(null);
 
@@ -115,37 +109,30 @@ export default function FolderDetail() {
     const renderItem = ({ item }) => {
         const isPdf = isPdfFile(item.image);
         const info = getRecordInfo(item);
-        const displayLines = info.lines.slice(0, 3).map(l => `${l.label}: ${l.value}`);
+        const isHighlighted = String(item.id) === String(searchId);
 
         return (
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, isHighlighted && styles.highlightedCard, { backgroundColor: COLORS.surface }]}
                 onPress={() => setPreviewItem(item)}
             >
-                <View style={styles.cardImageContainer}>
+                <View style={[styles.cardImageContainer, { backgroundColor: COLORS.background }]}>
                     {item.image ? (
                         isPdf ? (
                             <View style={styles.pdfContainer}>
-                                <Icon source="file-pdf-box" size={40} color="#ef4444" />
-                                <Text style={styles.pdfLabel}>PDF</Text>
+                                <MaterialCommunityIcons name="file-pdf-box" size={32} color={COLORS.danger} />
                             </View>
                         ) : (
                             <Image source={{ uri: item.image }} style={styles.cardImage} resizeMode="cover" />
                         )
                     ) : (
-                        <View style={styles.noFileContainer}>
-                            <Icon source="file-document-outline" size={32} color={COLORS.textGray} />
-                        </View>
+                        <MaterialCommunityIcons name="file-document-outline" size={32} color={COLORS.textGray} />
                     )}
                 </View>
 
                 <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>{info.title}</Text>
-                    {displayLines.map((line, index) => (
-                        <Text key={index} style={styles.cardLine} numberOfLines={1}>
-                            {line}
-                        </Text>
-                    ))}
+                    <Text style={[styles.cardTitle, { color: COLORS.textDark }]} numberOfLines={1}>{info.title}</Text>
+                    <Text style={styles.cardDate}>{item.date}</Text>
                 </View>
             </TouchableOpacity>
         );
@@ -154,7 +141,6 @@ export default function FolderDetail() {
     const openPdf = async (uri) => {
         try {
             if (Platform.OS === 'android') {
-                // For Android, use IntentLauncher for direct "Open With" experience (Adobe Reader support)
                 const contentUri = await FileSystem.getContentUriAsync(uri);
                 await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
                     data: contentUri,
@@ -162,7 +148,6 @@ export default function FolderDetail() {
                     type: 'application/pdf',
                 });
             } else {
-                // For iOS, sharing dialog works well as a preview
                 const isAvailable = await Sharing.isAvailableAsync();
                 if (isAvailable) {
                     await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'PDF Dosyasını Aç' });
@@ -198,12 +183,12 @@ export default function FolderDetail() {
     }
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]} edges={['top', 'left', 'right']}>
+            <View style={[styles.header, { backgroundColor: COLORS.surface }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Icon source="arrow-left" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{category || 'Belgeler'}</Text>
+                <Text style={[styles.headerTitle, { color: COLORS.textDark }]}>{category || 'Belgeler'}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -277,35 +262,35 @@ export default function FolderDetail() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-    headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textDark },
+    container: { flex: 1 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+    headerTitle: { fontSize: 18, fontWeight: '700' },
     backButton: { padding: 8, marginHorizontal: -8 },
     listContent: { padding: 12, paddingBottom: 100 },
-    card: { flex: 1, backgroundColor: COLORS.white, borderRadius: 12, overflow: 'hidden', marginBottom: 12, elevation: 2 },
-    cardImageContainer: { height: 100, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center' },
+    card: { flex: 1, borderRadius: 16, overflow: 'hidden', marginBottom: 12, elevation: 2 },
+    highlightedCard: { borderWidth: 2 },
+    cardImageContainer: { height: 110, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
     cardImage: { width: '100%', height: '100%' },
     pdfContainer: { alignItems: 'center', gap: 4 },
-    pdfLabel: { fontSize: 10, fontWeight: '600', color: '#ef4444' },
-    cardContent: { padding: 10 },
-    cardTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textDark, marginBottom: 4 },
-    cardLine: { fontSize: 11, color: COLORS.textGray, marginBottom: 2 },
+    cardContent: { padding: 12, alignItems: 'center' },
+    cardTitle: { fontSize: 14, fontWeight: '700', marginBottom: 2, textAlign: 'center' },
+    cardDate: { fontSize: 12 },
     emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
     iconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#e5e7eb', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-    emptyTitle: { fontSize: 20, fontWeight: '700', color: COLORS.textDark, marginBottom: 8 },
-    emptySubtitle: { fontSize: 14, color: COLORS.textGray, textAlign: 'center', lineHeight: 20 },
-    modalContainer: { flex: 1, backgroundColor: COLORS.background },
+    emptyTitle: { fontSize: 20, fontWeight: '700', marginBottom: 8 },
+    emptySubtitle: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
+    modalContainer: { flex: 1 },
     modalContent: { flex: 1 },
     modalScrollContent: { padding: 20, paddingBottom: 40 },
-    detailsContainer: { backgroundColor: COLORS.white, borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border },
-    detailsTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textDark, marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+    detailsContainer: { borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 1 },
+    detailsTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1 },
     detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-    detailLabel: { fontSize: 14, color: COLORS.textGray, fontWeight: '500' },
-    detailValue: { fontSize: 14, color: COLORS.textDark, fontWeight: '600', flex: 1, textAlign: 'right', marginLeft: 16 },
-    sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.textDark, marginBottom: 12, marginLeft: 4 },
+    detailLabel: { fontSize: 14, fontWeight: '500' },
+    detailValue: { fontSize: 14, fontWeight: '600', flex: 1, textAlign: 'right', marginLeft: 16 },
+    sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12, marginLeft: 4 },
     fileSection: { marginBottom: 20 },
-    fileButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: COLORS.border, gap: 16 },
+    fileButton: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, borderWidth: 1, gap: 16 },
     fileIconBox: { width: 50, height: 50, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-    fileName: { fontSize: 15, fontWeight: '600', color: COLORS.textDark, marginBottom: 2 },
-    fileAction: { fontSize: 13, color: COLORS.primary, fontWeight: '500' },
+    fileName: { fontSize: 15, fontWeight: '600', marginBottom: 2 },
+    fileAction: { fontSize: 13, fontWeight: '500' },
 });

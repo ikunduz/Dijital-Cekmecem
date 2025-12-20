@@ -5,25 +5,54 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
+    "jsEngine": "hermes",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F57C00"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "android": {
+      "package": "com.dijitalcekmecem.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#F57C00"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.dijitalcekmecem.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Yeni kayıtlar için fotoğraf çekebilmeniz için kamera erişimi gereklidir.",
+        "NSPhotoLibraryUsageDescription": "Cihazınızdaki belgeleri veya fotoğrafları kayıtlara ekleyebilmeniz için galeriye erişim gereklidir."
+      }
     },
     "plugins": [
-      "expo-router"
-    ]
+      "expo-router",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-6963403476404310~9842103442",
+          "iosAppId": "ca-app-pub-6963403476404310~9842103442"
+        }
+      ]
+    ],
+    "extra": {
+      "adMob": {
+        "bannerUnitId": "ca-app-pub-6963403476404310/4938079366",
+        "interstitialUnitId": "ca-app-pub-6963403476404310/9998834355"
+      }
+    }
   }
 }

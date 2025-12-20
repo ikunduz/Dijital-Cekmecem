@@ -19,12 +19,14 @@ import { useFinanceContext } from '../context/FinanceContext';
 
 const COLORS = {
     primary: '#F57C00',
-    background: '#F0F2F5',
-    white: '#FFFFFF',
+    background: '#FFFFFF',
+    surface: '#FFFFFF',
+    border: '#e2e8f0',
     textDark: '#0f172a',
     textGray: '#647487',
     success: '#22c55e',
     warning: '#f59e0b',
+    inputBg: '#f8fafc',
 };
 
 const GOAL_ICONS = [
@@ -151,26 +153,26 @@ export default function SavingsScreen() {
                         return (
                             <TouchableOpacity
                                 key={goal.id}
-                                style={styles.goalCard}
+                                style={[styles.goalCard, { backgroundColor: COLORS.surface }]}
                                 onLongPress={() => handleDeleteGoal(goal.id)}
                             >
                                 <View style={styles.goalHeader}>
-                                    <View style={styles.goalIconContainer}>
+                                    <View style={[styles.goalIconContainer, { backgroundColor: COLORS.primary + '15' }]}>
                                         {getIconComponent(goal.icon)}
                                     </View>
                                     <View style={styles.goalInfo}>
-                                        <Text style={styles.goalName}>{goal.name}</Text>
-                                        <Text style={styles.goalTarget}>
+                                        <Text style={[styles.goalName, { color: COLORS.textDark }]}>{goal.name}</Text>
+                                        <Text style={[styles.goalTarget, { color: COLORS.textGray }]}>
                                             Hedef: {formatCurrency(goal.targetAmount)}
                                         </Text>
                                     </View>
                                     {isCompleted ? (
-                                        <View style={styles.completedBadge}>
+                                        <View style={[styles.completedBadge, { backgroundColor: COLORS.success }]}>
                                             <MaterialCommunityIcons name="check" size={16} color="white" />
                                         </View>
                                     ) : (
                                         <TouchableOpacity
-                                            style={styles.addButton}
+                                            style={[styles.addButton, { backgroundColor: COLORS.primary + '15' }]}
                                             onPress={() => setAddAmountModal(goal.id)}
                                         >
                                             <MaterialCommunityIcons name="plus" size={20} color={COLORS.primary} />
@@ -179,7 +181,7 @@ export default function SavingsScreen() {
                                 </View>
 
                                 <View style={styles.progressSection}>
-                                    <View style={styles.progressBarBg}>
+                                    <View style={[styles.progressBarBg, { backgroundColor: COLORS.border }]}>
                                         <View
                                             style={[
                                                 styles.progressBarFill,
@@ -191,11 +193,12 @@ export default function SavingsScreen() {
                                         />
                                     </View>
                                     <View style={styles.progressLabels}>
-                                        <Text style={styles.currentAmount}>
+                                        <Text style={[styles.currentAmount, { color: COLORS.textDark }]}>
                                             {formatCurrency(goal.currentAmount || 0)}
                                         </Text>
                                         <Text style={[
                                             styles.progressPercent,
+                                            { color: COLORS.primary },
                                             isCompleted && { color: COLORS.success }
                                         ]}>
                                             %{Math.round(progress)}
@@ -308,7 +311,7 @@ export default function SavingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: '#FFFFFF',
     },
     header: {
         paddingBottom: 16,
@@ -339,17 +342,14 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: COLORS.textDark,
         marginTop: 16,
     },
     emptySubtext: {
         fontSize: 14,
-        color: COLORS.textGray,
         marginTop: 8,
         textAlign: 'center',
     },
     goalCard: {
-        backgroundColor: COLORS.white,
         borderRadius: 16,
         padding: 16,
         marginBottom: 12,
@@ -367,7 +367,6 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 14,
-        backgroundColor: COLORS.primary + '15',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -378,18 +377,15 @@ const styles = StyleSheet.create({
     goalName: {
         fontSize: 16,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     goalTarget: {
         fontSize: 13,
-        color: COLORS.textGray,
         marginTop: 2,
     },
     addButton: {
         width: 36,
         height: 36,
         borderRadius: 10,
-        backgroundColor: COLORS.primary + '15',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -397,7 +393,6 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: COLORS.success,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -406,7 +401,6 @@ const styles = StyleSheet.create({
     },
     progressBarBg: {
         height: 8,
-        backgroundColor: '#e2e8f0',
         borderRadius: 4,
         overflow: 'hidden',
     },
@@ -422,12 +416,10 @@ const styles = StyleSheet.create({
     currentAmount: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textDark,
     },
     progressPercent: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.primary,
     },
     modalOverlay: {
         flex: 1,
@@ -435,7 +427,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: COLORS.white,
+        backgroundColor: '#FFFFFF',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
@@ -450,21 +442,19 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     inputLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textDark,
         marginBottom: 8,
         marginTop: 16,
     },
     textInput: {
-        backgroundColor: COLORS.background,
+        backgroundColor: '#f8fafc',
         borderRadius: 12,
         padding: 14,
         fontSize: 16,
-        color: COLORS.textDark,
+        color: '#0f172a',
     },
     iconGrid: {
         flexDirection: 'row',
@@ -476,18 +466,18 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 12,
-        backgroundColor: COLORS.background,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: '#f8fafc',
         borderWidth: 2,
         borderColor: 'transparent',
     },
     iconOptionSelected: {
-        borderColor: COLORS.primary,
-        backgroundColor: COLORS.primary + '15',
+        borderColor: '#F57C00',
+        backgroundColor: '#FFF3E0',
     },
     createButton: {
-        backgroundColor: COLORS.primary,
+        backgroundColor: '#F57C00',
         borderRadius: 12,
         padding: 16,
         alignItems: 'center',
@@ -502,7 +492,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: 20,
         bottom: 24,
-        backgroundColor: COLORS.primary,
         borderRadius: 16,
+        backgroundColor: '#F57C00',
     },
 });

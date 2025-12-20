@@ -37,7 +37,7 @@ export default function DrawerGrid({ stats, financeStats }) {
             icon: 'file-document-outline',
             color: '#10b981', // Emerald
             info: stats.docInfo || 'Tamam',
-            route: '/documents'
+            route: '/archive'
         },
         {
             id: 'budget',
@@ -45,7 +45,7 @@ export default function DrawerGrid({ stats, financeStats }) {
             icon: 'wallet',
             color: '#f59e0b', // Amber/Orange
             info: financeStats?.balance !== undefined ? `${financeStats.balance > 0 ? '+' : ''}${financeStats.balance} ₺` : 'Hesaplanıyor',
-            route: '/budget'
+            route: '/wallet'
         },
         {
             id: 'savings',

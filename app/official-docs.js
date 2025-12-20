@@ -5,17 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const COLORS = {
-    primary: "#F57C00",
-    background: "#E5E7EB",
-    textDark: "#111417",
-    textGray: "#647487",
-    white: "#FFFFFF",
-    border: "#e5e7eb",
-};
+import { useAppColors } from '../utils/theme';
 
 export default function OfficialDocs() {
     const router = useRouter();
+    const COLORS = useAppColors();
 
     const folders = [
         { key: 'deed', label: 'Tapu', icon: 'home-city', color: '#3b82f6' },
@@ -27,19 +21,19 @@ export default function OfficialDocs() {
     ];
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]} edges={['top', 'left', 'right']}>
 
             {/* HEADER */}
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: COLORS.surface, borderBottomColor: COLORS.border }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <MaterialCommunityIcons name="arrow-left" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Resmi Evraklar</Text>
+                <Text style={[styles.headerTitle, { color: COLORS.textDark }]}>Resmi Evraklar</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.introText}>
+                <Text style={[styles.introText, { color: COLORS.textGray }]}>
                     Belge türünü seçerek kayıtlarını görüntüle
                 </Text>
 
@@ -54,7 +48,7 @@ export default function OfficialDocs() {
                             })}
                             activeOpacity={0.7}
                         >
-                            <Surface style={styles.card} elevation={2}>
+                            <Surface style={[styles.card, { backgroundColor: COLORS.surface }]} elevation={2}>
                                 <View style={[styles.iconCircle, { backgroundColor: `${folder.color}15` }]}>
                                     <MaterialCommunityIcons
                                         name={folder.icon}
@@ -62,7 +56,7 @@ export default function OfficialDocs() {
                                         color={folder.color}
                                     />
                                 </View>
-                                <Text style={styles.cardTitle}>{folder.label}</Text>
+                                <Text style={[styles.cardTitle, { color: COLORS.textDark }]}>{folder.label}</Text>
                             </Surface>
                         </TouchableOpacity>
                     ))}
@@ -77,7 +71,6 @@ export default function OfficialDocs() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
@@ -85,14 +78,11 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     backButton: {
         padding: 8,
@@ -103,7 +93,6 @@ const styles = StyleSheet.create({
     },
     introText: {
         fontSize: 15,
-        color: COLORS.textGray,
         marginBottom: 20,
         textAlign: 'center',
     },
@@ -117,7 +106,6 @@ const styles = StyleSheet.create({
         width: '48%',
     },
     card: {
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 16,
         alignItems: 'center',
@@ -136,7 +124,6 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 13,
         fontWeight: '600',
-        color: COLORS.textDark,
         textAlign: 'center',
     },
 });

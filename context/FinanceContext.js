@@ -73,26 +73,78 @@ export const FinanceProvider = ({ children }) => {
 
     // --- TRANSACTION ACTIONS ---
     const addTransaction = async (transaction, homeId) => {
-        const newTransaction = {
+        const timestamp = Date.now();
+        const mainTransaction = {
             ...transaction,
-            id: Date.now(),
+            id: timestamp,
             homeId: homeId,
+            status: transaction.status || 'completed',
             createdAt: new Date().toISOString(),
         };
-        const newTransactions = [newTransaction, ...transactions];
-        setTransactions(newTransactions);
-        await saveTransactions(newTransactions);
+
+        let updatedTransactions = [mainTransaction, ...transactions];
+
+        // Handle Recurring: Auto-create next month's entry as pending
+        if (transaction.isRecurring) {
+            const parts = transaction.date.split('.');
+            let d = new Date(parts[2], parts[1] - 1, parts[0]);
+            d.setMonth(d.getMonth() + 1);
+
+            const nextMonthDate = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+
+            const nextTransaction = {
+                ...transaction,
+                id: timestamp + 1,
+                homeId: homeId,
+                date: nextMonthDate,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+            };
+            updatedTransactions = [nextTransaction, ...updatedTransactions];
+        }
+
+        setTransactions(updatedTransactions);
+        await saveTransactions(updatedTransactions);
 
         // Add XP for transaction
         if (addXP) await addXP(10);
 
-        return newTransaction;
+        return mainTransaction;
     };
 
     const editTransaction = async (id, updatedData) => {
         const newTransactions = transactions.map(t =>
             t.id === id ? { ...t, ...updatedData } : t
         );
+        setTransactions(newTransactions);
+        await saveTransactions(newTransactions);
+    };
+
+    const completeTransaction = async (id) => {
+        const transaction = transactions.find(t => t.id === id);
+        if (!transaction) return;
+
+        let newTransactions = transactions.map(t =>
+            t.id === id ? { ...t, status: 'completed' } : t
+        );
+
+        // If it's recurring, schedule the NEXT one
+        if (transaction.isRecurring) {
+            const parts = transaction.date.split('.');
+            let d = new Date(parts[2], parts[1] - 1, parts[0]);
+            d.setMonth(d.getMonth() + 1);
+            const nextDate = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+
+            const nextTransaction = {
+                ...transaction,
+                id: Date.now(),
+                date: nextDate,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+            };
+            newTransactions = [nextTransaction, ...newTransactions];
+        }
+
         setTransactions(newTransactions);
         await saveTransactions(newTransactions);
     };
@@ -146,11 +198,11 @@ export const FinanceProvider = ({ children }) => {
         });
 
         const income = filtered
-            .filter(t => t.type === 'income')
+            .filter(t => t.type === 'income' && t.status !== 'pending')
             .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
         const expense = filtered
-            .filter(t => t.type === 'expense')
+            .filter(t => t.type === 'expense' && t.status !== 'pending')
             .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
         return {
@@ -161,10 +213,20 @@ export const FinanceProvider = ({ children }) => {
         };
     }, [transactions]);
 
+    const getTotalBalance = React.useCallback((homeId) => {
+        return transactions
+            .filter(t => (!homeId || String(t.homeId) === String(homeId)) && t.status !== 'pending')
+            .reduce((sum, t) => {
+                const amount = Number(t.amount) || 0;
+                return t.type === 'income' ? sum + amount : sum - amount;
+            }, 0);
+    }, [transactions]);
+
     const getCategoryBreakdown = React.useCallback((homeId, type = 'expense', month = new Date().getMonth(), year = new Date().getFullYear()) => {
         const filtered = transactions.filter(t => {
             if (homeId && String(t.homeId) !== String(homeId)) return false;
             if (t.type !== type) return false;
+            if (t.status === 'pending') return false; // Don't show in breakdown
             const parts = t.date.split('.');
             if (parts.length < 3) return false;
             const tDate = new Date(parts[2], parts[1] - 1, parts[0]);
@@ -217,6 +279,7 @@ export const FinanceProvider = ({ children }) => {
             // Transaction actions
             addTransaction,
             editTransaction,
+            completeTransaction,
             deleteTransaction,
             // Savings actions
             addSavingsGoal,
@@ -224,10 +287,12 @@ export const FinanceProvider = ({ children }) => {
             deleteSavingsGoal,
             // Computed
             getMonthlyStats,
+            getTotalBalance,
             getCategoryBreakdown,
             getRecentTransactions,
             getMonthlyTrend,
         }}>
+
             {children}
         </FinanceContext.Provider>
     );

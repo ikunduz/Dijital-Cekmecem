@@ -7,19 +7,17 @@ export const useHomeContext = () => useContext(HomeContext);
 
 export const HomeProvider = ({ children }) => {
     // --- STATE ---
-    const [homes, setHomes] = useState([]); // Array of home profiles
-    const [currentHomeId, setCurrentHomeId] = useState(null); // ID of selected home
-    const [allHistory, setAllHistory] = useState([]); // All records across all homes
-    const [xp, setXp] = useState(0); // Career XP for gamification
+    const [homes, setHomes] = useState([]);
+    const [currentHomeId, setCurrentHomeId] = useState(null);
+    const [allHistory, setAllHistory] = useState([]);
+    const [xp, setXp] = useState(0);
     const [loading, setLoading] = useState(true);
 
     // --- DERIVED STATE ---
-    // Current home profile
     const homeProfile = useMemo(() => {
         return homes.find(h => h.id === currentHomeId) || null;
     }, [homes, currentHomeId]);
 
-    // History filtered by current home
     const history = useMemo(() => {
         if (!currentHomeId) return [];
         return allHistory.filter(h => h.homeId === currentHomeId);
@@ -32,38 +30,32 @@ export const HomeProvider = ({ children }) => {
 
     const loadData = async () => {
         try {
-            // Load homes array
             const homesJson = await AsyncStorage.getItem('@home_homes');
             let loadedHomes = homesJson ? JSON.parse(homesJson) : [];
 
-            // Load history
             const historyJson = await AsyncStorage.getItem('@home_history');
             let loadedHistory = historyJson ? JSON.parse(historyJson) : [];
 
-            // Load XP
             const xpJson = await AsyncStorage.getItem('@home_xp');
             setXp(xpJson ? JSON.parse(xpJson) : 0);
 
-            // AUTO-CREATE DEFAULT HOME if none exist
+            // AUTO-CREATE DEFAULT HOME
             if (loadedHomes.length === 0) {
                 const defaultHome = {
                     id: Date.now(),
                     title: 'Evim',
                     address: '',
                     ownerName: '',
-                    daskNumber: '',
-                    internetNumber: '',
                     homeImage: null,
                     themeColor: 'orange',
                 };
                 loadedHomes = [defaultHome];
-                await AsyncStorage.setItem('@home_homes', JSON.stringify(loadedHomes));
+                await saveHomes(loadedHomes);
             }
 
             setHomes(loadedHomes);
             setAllHistory(loadedHistory);
 
-            // Load selected home ID (or default to first home)
             const selectedIdJson = await AsyncStorage.getItem('@home_selected_id');
             if (selectedIdJson) {
                 setCurrentHomeId(JSON.parse(selectedIdJson));
@@ -119,7 +111,6 @@ export const HomeProvider = ({ children }) => {
         setHomes(newHomes);
         await saveHomes(newHomes);
 
-        // Switch to the new home
         setCurrentHomeId(newHome.id);
         await saveSelectedHomeId(newHome.id);
         return newHome;
@@ -141,17 +132,14 @@ export const HomeProvider = ({ children }) => {
     };
 
     const deleteHome = async (homeId) => {
-        // Remove home from list
         const newHomes = homes.filter(h => h.id !== homeId);
         setHomes(newHomes);
         await saveHomes(newHomes);
 
-        // Remove associated history
         const newHistory = allHistory.filter(h => h.homeId !== homeId);
         setAllHistory(newHistory);
         await saveHistory(newHistory);
 
-        // If deleted home was current, switch to first available
         if (currentHomeId === homeId && newHomes.length > 0) {
             setCurrentHomeId(newHomes[0].id);
             await saveSelectedHomeId(newHomes[0].id);
@@ -178,7 +166,6 @@ export const HomeProvider = ({ children }) => {
         setAllHistory(newHistory);
         await saveHistory(newHistory);
 
-        // Add XP for creating a record
         await addXP(10);
     };
 
@@ -198,24 +185,18 @@ export const HomeProvider = ({ children }) => {
 
     return (
         <HomeContext.Provider value={{
-            // Multi-home state
             homes,
             currentHomeId,
-            // Backwards-compatible accessors (filtered by current home)
             history,
             homeProfile,
-            // Home actions
             addNewHome,
             updateHomeProfile,
             switchHome,
             deleteHome,
-            // Record actions
             addRecord,
             editRecord,
             deleteRecord,
-            // Loading state
             loading,
-            // Gamification
             xp,
             addXP
         }}>

@@ -6,18 +6,14 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useHomeContext } from '../context/HomeContext';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { useAppColors } from '../utils/theme';
+import { showInterstitialIfQualified } from '../components/Ads';
 
-const COLORS = {
-    primary: "#F57C00",
-    background: "#E5E7EB",
-    textDark: "#111417",
-    textGray: "#647487",
-    white: "#FFFFFF",
-    border: "#e5e7eb",
-};
+
 
 export default function AddRecord() {
     const router = useRouter();
+    const COLORS = useAppColors();
     const { recordId } = useLocalSearchParams();
     const { addRecord, editRecord, history, homeProfile } = useHomeContext();
 
@@ -171,13 +167,13 @@ export default function AddRecord() {
     const currentSubtypes = recordType === 'warranty' ? warrantySubtypes : docSubtypes;
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: COLORS.surface }]} edges={['top', 'left', 'right']}>
             {/* HEADER */}
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: COLORS.surface, borderBottomColor: COLORS.border }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
                     <Icon source="close" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{recordId ? 'Kaydı Güncelle' : 'Yeni Kayıt Ekle'}</Text>
+                <Text style={[styles.headerTitle, { color: COLORS.textDark }]}>{recordId ? 'Kaydı Güncelle' : 'Yeni Kayıt Ekle'}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -363,13 +359,13 @@ export default function AddRecord() {
 
                 {/* 4. ATTACHMENT */}
                 <View style={{ marginTop: 20 }}>
-                    <Text style={styles.sectionLabel}>Fotoğraf / Belge</Text>
+                    <Text style={[styles.sectionLabel, { color: COLORS.textGray }]}>Fotoğraf / Belge</Text>
                     {imageUri ? (
-                        <View style={styles.imagePreviewContainer}>
+                        <View style={[styles.imagePreviewContainer, { backgroundColor: COLORS.background }]}>
                             {isPdf ? (
                                 <View style={styles.pdfPreview}>
                                     <Icon source="file-pdf-box" size={64} color="#ef4444" />
-                                    <Text style={styles.pdfText}>PDF Dosyası Eklendi</Text>
+                                    <Text style={[styles.pdfText, { color: COLORS.textDark }]}>PDF Dosyası Eklendi</Text>
                                 </View>
                             ) : (
                                 <Image source={{ uri: imageUri }} style={styles.previewImage} resizeMode="contain" />
@@ -382,10 +378,10 @@ export default function AddRecord() {
                             </TouchableOpacity>
                         </View>
                     ) : (
-                        <TouchableOpacity style={styles.photoBox} onPress={pickImage}>
+                        <TouchableOpacity style={[styles.photoBox, { borderColor: COLORS.border, backgroundColor: COLORS.background }]} onPress={pickImage}>
                             <View style={styles.photoInner}>
                                 <Icon source="file-plus" size={32} color={COLORS.textGray} />
-                                <Text style={styles.photoText}>Ekle</Text>
+                                <Text style={[styles.photoText, { color: COLORS.textGray }]}>Ekle</Text>
                             </View>
                         </TouchableOpacity>
                     )}
@@ -394,7 +390,7 @@ export default function AddRecord() {
             </ScrollView>
 
             {/* 5. SAVE BUTTON */}
-            <View style={styles.footer}>
+            <View style={[styles.footer, { borderTopColor: COLORS.border, backgroundColor: COLORS.white }]}>
                 <Button
                     mode="contained"
                     onPress={async () => {
@@ -422,6 +418,7 @@ export default function AddRecord() {
                             editRecord(parseInt(recordId), recordData);
                         } else {
                             addRecord(recordData);
+                            await showInterstitialIfQualified();
                         }
                         router.back();
                     }}
@@ -439,7 +436,6 @@ export default function AddRecord() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.white,
     },
     header: {
         flexDirection: 'row',
@@ -448,12 +444,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     closeButton: {
         padding: 8,
@@ -467,7 +461,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 24,
-        backgroundColor: COLORS.background,
         padding: 4,
         borderRadius: 12,
     },
@@ -481,7 +474,6 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     typeButtonActive: {
-        backgroundColor: COLORS.primary,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
@@ -491,16 +483,13 @@ const styles = StyleSheet.create({
     typeText: {
         fontSize: 13,
         fontWeight: '500',
-        color: COLORS.textGray,
     },
     typeTextActive: {
-        color: COLORS.white,
         fontWeight: '600',
     },
     sectionLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textGray,
         marginBottom: 8,
         marginLeft: 4,
     },
@@ -511,52 +500,41 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: COLORS.background,
         marginRight: 8,
         borderWidth: 1,
-        borderColor: COLORS.border,
     },
     subTypeChipActive: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
     },
     subTypeText: {
         fontSize: 13,
-        color: COLORS.textGray,
     },
     subTypeTextActive: {
-        color: COLORS.white,
         fontWeight: '600',
     },
     formContainer: {
         gap: 16,
     },
     input: {
-        backgroundColor: COLORS.white,
     },
     photoBox: {
         height: 120,
         borderWidth: 2,
-        borderColor: COLORS.border,
         borderStyle: 'dashed',
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.background,
     },
     photoInner: {
         alignItems: 'center',
         gap: 8,
     },
     photoText: {
-        color: COLORS.textGray,
         fontSize: 14,
     },
     imagePreviewContainer: {
         height: 200,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: '#f3f4f6',
         justifyContent: 'center',
         alignItems: 'center',
         position: 'relative',
@@ -570,7 +548,6 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     pdfText: {
-        color: COLORS.textDark,
         fontSize: 14,
         fontWeight: '500',
     },
@@ -578,15 +555,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 8,
-        backgroundColor: 'rgba(0,0,0,0.5)',
         borderRadius: 20,
         padding: 4,
     },
     footer: {
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: COLORS.border,
-        backgroundColor: COLORS.white,
     },
     saveButton: {
         borderRadius: 8,

@@ -11,7 +11,7 @@ import {
     Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { IconButton } from 'react-native-paper';
+import { IconButton, Switch } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -19,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Icon } from 'react-native-paper';
+import { showInterstitialIfQualified } from '../components/Ads';
 
 import { useHomeContext } from '../context/HomeContext';
 import { useFinanceContext, INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../context/FinanceContext';
@@ -48,6 +49,7 @@ export default function AddTransactionScreen() {
     const [imageUri, setImageUri] = useState(null);
     const [isPdf, setIsPdf] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [isRecurring, setIsRecurring] = useState(false);
 
     const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
@@ -143,8 +145,10 @@ export default function AddTransactionScreen() {
                 date: formatDate(date),
                 attachment: imageUri,
                 isPdf: isPdf,
+                isRecurring: isRecurring,
             }, currentHomeId);
 
+            await showInterstitialIfQualified();
             router.back();
         } catch (e) {
             Alert.alert('Hata', 'İşlem kaydedilemedi');
@@ -287,6 +291,22 @@ export default function AddTransactionScreen() {
                         </TouchableOpacity>
                     </View>
 
+                    {/* RECURRING TOGGLE */}
+                    <View style={[styles.section, styles.recurringRow]}>
+                        <View style={styles.recurringInfo}>
+                            <MaterialCommunityIcons name="repeat" size={24} color={COLORS.textGray} />
+                            <View style={{ marginLeft: 12 }}>
+                                <Text style={styles.recurringTitle}>Her Ay Tekrarla</Text>
+                                <Text style={styles.recurringSubtitle}>Her ay otomatik kayıt oluşturur</Text>
+                            </View>
+                        </View>
+                        <Switch
+                            value={isRecurring}
+                            onValueChange={setIsRecurring}
+                            color={type === 'income' ? COLORS.income : COLORS.expense}
+                        />
+                    </View>
+
                     {showDatePicker && (
                         <DateTimePicker
                             value={date}
@@ -346,7 +366,6 @@ export default function AddTransactionScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     header: {
         paddingBottom: 16,
@@ -371,9 +390,9 @@ const styles = StyleSheet.create({
     toggleContainer: {
         flexDirection: 'row',
         marginHorizontal: 16,
-        backgroundColor: COLORS.white,
+        backgroundColor: '#f1f5f9',
         borderRadius: 16,
-        padding: 6,
+        padding: 4,
         marginBottom: 24,
     },
     toggleButton: {
@@ -381,20 +400,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: 14,
         borderRadius: 12,
         gap: 8,
+        backgroundColor: 'transparent',
     },
     toggleButtonActiveIncome: {
-        backgroundColor: COLORS.income,
+        backgroundColor: '#22c55e',
     },
     toggleButtonActiveExpense: {
-        backgroundColor: COLORS.expense,
+        backgroundColor: '#ef4444',
     },
     toggleText: {
         fontSize: 15,
-        fontWeight: '600',
-        color: COLORS.textGray,
+        fontWeight: '700',
+        color: '#64748b',
     },
     toggleTextActive: {
         color: 'white',
@@ -405,7 +425,6 @@ const styles = StyleSheet.create({
     },
     amountLabel: {
         fontSize: 14,
-        color: COLORS.textGray,
         marginBottom: 8,
     },
     amountInputContainer: {
@@ -415,14 +434,12 @@ const styles = StyleSheet.create({
     amountInput: {
         fontSize: 48,
         fontWeight: '700',
-        color: COLORS.textDark,
         textAlign: 'center',
         minWidth: 120,
     },
     currencySymbol: {
         fontSize: 32,
         fontWeight: '600',
-        color: COLORS.textGray,
         marginLeft: 4,
     },
     section: {
@@ -432,7 +449,6 @@ const styles = StyleSheet.create({
     sectionLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textDark,
         marginBottom: 12,
     },
     categoryGrid: {
@@ -442,7 +458,6 @@ const styles = StyleSheet.create({
     },
     categoryItem: {
         width: '30%',
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 12,
         alignItems: 'center',
@@ -461,7 +476,6 @@ const styles = StyleSheet.create({
     categoryLabel: {
         fontSize: 12,
         fontWeight: '500',
-        color: COLORS.textDark,
         textAlign: 'center',
     },
     checkBadge: {
@@ -477,22 +491,18 @@ const styles = StyleSheet.create({
     dateButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 16,
         gap: 12,
     },
     dateText: {
         fontSize: 16,
-        color: COLORS.textDark,
         fontWeight: '500',
     },
     descriptionInput: {
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 16,
         fontSize: 15,
-        color: COLORS.textDark,
         minHeight: 80,
         textAlignVertical: 'top',
         marginBottom: 8,
@@ -501,26 +511,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 16,
         gap: 12,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
         borderStyle: 'dashed',
     },
     attachButtonText: {
         fontSize: 14,
-        color: COLORS.textGray,
         fontWeight: '500',
     },
     attachmentPreview: {
         height: 120,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
         position: 'relative',
     },
     previewImage: {
@@ -536,7 +541,6 @@ const styles = StyleSheet.create({
     },
     attachmentText: {
         fontSize: 14,
-        color: COLORS.textDark,
         fontWeight: '600',
     },
     removeAttachment: {
@@ -545,5 +549,25 @@ const styles = StyleSheet.create({
         right: 8,
         backgroundColor: 'rgba(0,0,0,0.4)',
         borderRadius: 12,
+    },
+    recurringRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        borderRadius: 12,
+    },
+    recurringInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    recurringTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    recurringSubtitle: {
+        fontSize: 11,
+        marginTop: 2,
     }
 });

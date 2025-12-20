@@ -5,17 +5,11 @@ import { useRouter } from 'expo-router';
 import { useHomeContext } from '../context/HomeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const COLORS = {
-    primary: "#F57C00",
-    background: "#E5E7EB",
-    textDark: "#111417",
-    textGray: "#647487",
-    white: "#FFFFFF",
-    border: "#e5e7eb",
-};
+import { useAppColors } from '../utils/theme';
 
 export default function SelectHome() {
     const router = useRouter();
+    const COLORS = useAppColors();
     const { homes, switchHome, currentHomeId } = useHomeContext();
 
     const handleSelectHome = async (homeId) => {
@@ -28,16 +22,16 @@ export default function SelectHome() {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]} edges={['top', 'left', 'right']}>
 
             {/* HEADER */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Ev Seçin</Text>
+            <View style={[styles.header, { backgroundColor: COLORS.surface, borderBottomColor: COLORS.border }]}>
+                <Text style={[styles.headerTitle, { color: COLORS.textDark }]}>Ev Seçin</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <Text style={styles.introText}>
+                <Text style={[styles.introText, { color: COLORS.textGray }]}>
                     Hangi mülkünüzle işlem yapmak istiyorsunuz?
                 </Text>
 
@@ -48,12 +42,16 @@ export default function SelectHome() {
                         return (
                             <TouchableOpacity
                                 key={home.id}
-                                style={[styles.card, isSelected && styles.cardSelected]}
+                                style={[
+                                    styles.card,
+                                    { backgroundColor: COLORS.surface },
+                                    isSelected && [styles.cardSelected, { borderColor: COLORS.primary }]
+                                ]}
                                 onPress={() => handleSelectHome(home.id)}
                                 activeOpacity={0.7}
                             >
                                 {/* Home Image or Placeholder */}
-                                <View style={styles.imageContainer}>
+                                <View style={[styles.imageContainer, { backgroundColor: COLORS.background }]}>
                                     {home.homeImage ? (
                                         <Image source={{ uri: home.homeImage }} style={styles.image} resizeMode="cover" />
                                     ) : (
@@ -65,10 +63,10 @@ export default function SelectHome() {
 
                                 {/* Home Info */}
                                 <View style={styles.info}>
-                                    <Text style={styles.title}>
+                                    <Text style={[styles.title, { color: COLORS.textDark }]}>
                                         {home.title || 'Evim'}
                                     </Text>
-                                    <Text style={styles.subtitle}>{home.address || 'Adres Girilmemiş'}</Text>
+                                    <Text style={[styles.subtitle, { color: COLORS.textGray }]}>{home.address || 'Adres Girilmemiş'}</Text>
                                 </View>
 
                                 {/* Selection Indicator */}
@@ -83,9 +81,12 @@ export default function SelectHome() {
                 </View>
 
                 {/* ADD NEW HOME BUTTON */}
-                <TouchableOpacity style={styles.addButton} onPress={handleAddHome}>
+                <TouchableOpacity
+                    style={[styles.addButton, { backgroundColor: COLORS.surface, borderColor: COLORS.primary }]}
+                    onPress={handleAddHome}
+                >
                     <MaterialCommunityIcons name="plus-circle-outline" size={24} color={COLORS.primary} />
-                    <Text style={styles.addButtonText}>Yeni Ev Ekle</Text>
+                    <Text style={[styles.addButtonText, { color: COLORS.primary }]}>Yeni Ev Ekle</Text>
                 </TouchableOpacity>
 
                 <View style={{ height: 40 }} />
@@ -97,27 +98,22 @@ export default function SelectHome() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     header: {
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 16,
-        backgroundColor: COLORS.white,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     headerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     scrollContent: {
         padding: 16,
     },
     introText: {
         fontSize: 16,
-        color: COLORS.textGray,
         textAlign: 'center',
         marginBottom: 24,
     },
@@ -127,7 +123,6 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         padding: 12,
         shadowColor: "#000",
@@ -138,14 +133,12 @@ const styles = StyleSheet.create({
     },
     cardSelected: {
         borderWidth: 2,
-        borderColor: COLORS.primary,
     },
     imageContainer: {
         width: 80,
         height: 60,
         borderRadius: 8,
         overflow: 'hidden',
-        backgroundColor: '#f3f4f6',
     },
     image: {
         width: '100%',
@@ -163,11 +156,9 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 16,
         fontWeight: '600',
-        color: COLORS.textDark,
     },
     subtitle: {
         fontSize: 14,
-        color: COLORS.textGray,
         marginTop: 2,
     },
     selectedBadge: {
@@ -178,17 +169,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        backgroundColor: COLORS.white,
         borderRadius: 12,
         paddingVertical: 16,
         marginTop: 24,
         borderWidth: 2,
         borderStyle: 'dashed',
-        borderColor: COLORS.primary,
     },
     addButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: COLORS.primary,
     },
 });

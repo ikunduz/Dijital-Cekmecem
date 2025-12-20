@@ -193,46 +193,46 @@ export default function HomeReportPage() {
     };
 
     return (
-        <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]} edges={['top', 'left', 'right']}>
             {/* HEADER */}
-            <View style={styles.header}>
+            <View style={[styles.header, { backgroundColor: COLORS.surface, borderBottomColor: COLORS.border }]}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
                     <Icon source="arrow-left" size={24} color={COLORS.textDark} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Ev Raporu</Text>
+                <Text style={[styles.headerTitle, { color: COLORS.textDark }]}>Ev Raporu</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.infoBox}>
                     <Icon source="file-chart" size={48} color={COLORS.primary} />
-                    <Text style={styles.infoTitle}>Ev Raporu Oluştur</Text>
-                    <Text style={styles.infoText}>
+                    <Text style={[styles.infoTitle, { color: COLORS.textDark }]}>Ev Raporu Oluştur</Text>
+                    <Text style={[styles.infoText, { color: COLORS.textGray }]}>
                         Fatura, garanti ve evrak kayıtlarınızı PDF formatında raporlayın ve paylaşın.
                     </Text>
                 </View>
 
                 {/* Category Summary */}
-                <View style={styles.categoryList}>
+                <View style={[styles.categoryList, { backgroundColor: COLORS.surface }]}>
                     {Object.keys(groupedRecords).map((category, index) => (
-                        <View key={index} style={styles.categoryItem}>
-                            <Text style={styles.categoryName}>{category}</Text>
-                            <Text style={styles.categoryCount}>{groupedRecords[category].length} kayıt</Text>
+                        <View key={index} style={[styles.categoryItem, { borderBottomColor: COLORS.border }]}>
+                            <Text style={[styles.categoryName, { color: COLORS.textDark }]}>{category}</Text>
+                            <Text style={[styles.categoryCount, { color: COLORS.textGray }]}>{groupedRecords[category].length} kayıt</Text>
                         </View>
                     ))}
                     {Object.keys(groupedRecords).length === 0 && (
-                        <Text style={styles.emptyText}>Henüz kayıt yok</Text>
+                        <Text style={[styles.emptyText, { color: COLORS.textGray }]}>Henüz kayıt yok</Text>
                     )}
                 </View>
 
                 <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>Toplam Kayıt</Text>
-                        <Text style={styles.statValue}>{reportRecords.length}</Text>
+                    <View style={[styles.statItem, { backgroundColor: COLORS.surface }]}>
+                        <Text style={[styles.statLabel, { color: COLORS.textGray }]}>Toplam Kayıt</Text>
+                        <Text style={[styles.statValue, { color: COLORS.primary }]}>{reportRecords.length}</Text>
                     </View>
-                    <View style={styles.statItem}>
-                        <Text style={styles.statLabel}>Toplam Tutar</Text>
-                        <Text style={[styles.statValue, { fontSize: 18 }]}>{formatCurrency(totalCost)}</Text>
+                    <View style={[styles.statItem, { backgroundColor: COLORS.surface }]}>
+                        <Text style={[styles.statLabel, { color: COLORS.textGray }]}>Toplam Tutar</Text>
+                        <Text style={[styles.statValue, { fontSize: 18, color: COLORS.primary }]}>{formatCurrency(totalCost)}</Text>
                     </View>
                 </View>
 
@@ -257,7 +257,6 @@ export default function HomeReportPage() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.white,
     },
     header: {
         flexDirection: 'row',
@@ -266,12 +265,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
-        color: COLORS.textDark,
     },
     closeButton: {
         padding: 8,
@@ -288,19 +285,16 @@ const styles = StyleSheet.create({
     infoTitle: {
         fontSize: 22,
         fontWeight: '700',
-        color: COLORS.textDark,
         marginTop: 16,
         marginBottom: 12,
     },
     infoText: {
         fontSize: 15,
-        color: COLORS.textGray,
         textAlign: 'center',
         lineHeight: 22,
     },
     categoryList: {
         marginBottom: 24,
-        backgroundColor: COLORS.background,
         borderRadius: 12,
         padding: 16,
     },
@@ -309,20 +303,16 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 10,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     categoryName: {
         fontSize: 15,
         fontWeight: '500',
-        color: COLORS.textDark,
     },
     categoryCount: {
         fontSize: 14,
-        color: COLORS.textGray,
     },
     emptyText: {
         textAlign: 'center',
-        color: COLORS.textGray,
         paddingVertical: 20,
     },
     statsRow: {
@@ -333,20 +323,17 @@ const styles = StyleSheet.create({
     statItem: {
         flex: 1,
         alignItems: 'center',
-        backgroundColor: COLORS.background,
         paddingVertical: 16,
         paddingHorizontal: 16,
         borderRadius: 12,
     },
     statLabel: {
         fontSize: 13,
-        color: COLORS.textGray,
         marginBottom: 4,
     },
     statValue: {
         fontSize: 22,
         fontWeight: '700',
-        color: COLORS.primary,
     },
     exportButton: {
         width: '100%',

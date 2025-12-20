@@ -119,12 +119,13 @@ export default function History() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: COLORS.background }]} edges={['top', 'left', 'right']}>
+      {/* HEADER */}
+      <View style={[styles.header, { backgroundColor: COLORS.surface, borderBottomColor: COLORS.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Icon source="arrow-left" size={24} color={COLORS.textDark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tüm İşlem Geçmişi</Text>
+        <Text style={[styles.headerTitle, { color: COLORS.textDark }]}>Tüm İşlem Geçmişi</Text>
         <TouchableOpacity onPress={() => router.push({ pathname: '/add-record' })} style={styles.backButton}>
           <Icon source="plus" size={24} color={COLORS.primary} />
         </TouchableOpacity>
@@ -132,10 +133,10 @@ export default function History() {
 
       {records.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconCircle}>
+          <View style={[styles.emptyIconCircle, { backgroundColor: COLORS.surface }]}>
             <Icon source="history" size={48} color={COLORS.textGray} />
           </View>
-          <Text style={styles.emptyTitle}>Henüz kayıt yok</Text>
+          <Text style={[styles.emptyTitle, { color: COLORS.textDark }]}>Henüz kayıt yok</Text>
         </View>
       ) : (
         <FlatList
@@ -201,30 +202,30 @@ export default function History() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: COLORS.white, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textDark },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
   backButton: { padding: 8, marginHorizontal: -8 },
   listContent: { padding: 16 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 100 },
-  emptyIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: COLORS.textDark },
-  card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: COLORS.white, padding: 16, marginBottom: 12, borderRadius: 12 },
+  emptyIconCircle: { width: 100, height: 100, borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  emptyTitle: { fontSize: 20, fontWeight: '700' },
+  card: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, marginBottom: 12, borderRadius: 12 },
   cardLeft: { flexDirection: 'row', alignItems: 'center' },
-  iconBox: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e6f0fa', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: COLORS.textDark },
-  cardDate: { fontSize: 13, color: COLORS.textGray, marginTop: 2 },
+  iconBox: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  cardTitle: { fontSize: 16, fontWeight: '600' },
+  cardDate: { fontSize: 13, marginTop: 2 },
   cardRight: { alignItems: 'flex-end', gap: 8 },
   iconBtn: { padding: 4 },
-  cardCost: { fontSize: 16, fontWeight: '700', color: COLORS.primary },
-  modalContainer: { flex: 1, backgroundColor: COLORS.background },
+  cardCost: { fontSize: 16, fontWeight: '700' },
+  modalContainer: { flex: 1 },
   modalContent: { flex: 1 },
   modalScrollContent: { padding: 20 },
-  detailsContainer: { backgroundColor: COLORS.white, borderRadius: 12, padding: 16, marginBottom: 20 },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  detailLabel: { color: COLORS.textGray },
-  detailValue: { fontWeight: '600', color: COLORS.textDark, textAlign: 'right', flex: 1, marginLeft: 16 },
+  detailsContainer: { borderRadius: 12, padding: 16, marginBottom: 20 },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1 },
+  detailLabel: {},
+  detailValue: { fontWeight: '600', textAlign: 'right', flex: 1, marginLeft: 16 },
   fileSection: { marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
-  fileButton: { backgroundColor: COLORS.white, padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  fileButton: { padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1 },
 });

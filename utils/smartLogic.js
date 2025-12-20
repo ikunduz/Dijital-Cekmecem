@@ -87,3 +87,35 @@ export const analyzeBillTrends = (transactions) => {
 
     return null;
 };
+
+export const getSmartTips = (transactions, history, financeStats) => {
+    const tips = [];
+
+    // 1. Seasonal Tip
+    tips.push(getSeasonalTip());
+
+    // 2. Bill Anomaly
+    const billAnomalies = analyzeBillTrends(transactions || []);
+    if (billAnomalies) tips.push(billAnomalies);
+
+    // 3. Maintenance Tip (Random/Contextual)
+    const maintenanceTasks = [
+        { title: "Kombi Bakımı", text: "Kombini en son ne zaman kontrol ettin? Verimlilik için yıllık bakım şart.", icon: "radiator" },
+        { title: "Güvenlik Kontrolü", text: "Duman dedektörü pillerini ve yangın tüpünü kontrol etmeyi unutma.", icon: "shield-alert" },
+        { title: "Tasarruf İpucu", text: "Aydınlatmada LED ampul kullanarak elektrik faturanı %15 azaltabilirsin.", icon: "lightbulb-outline" }
+    ];
+    tips.push(maintenanceTasks[Math.floor(Math.random() * maintenanceTasks.length)]);
+
+    // 4. Budget Warning
+    if (financeStats && financeStats.balance < 0) {
+        tips.push({
+            title: "Bütçe Uyarısı",
+            text: `Bu ay bütçeni ${Math.abs(financeStats.balance)} TL aştın. Harcamalarını gözden geçirmek isteyebilirsin.`,
+            icon: "alert-circle",
+            color: "#ef4444"
+        });
+    }
+
+    return tips;
+};
+
