@@ -52,6 +52,10 @@
       "adMob": {
         "bannerUnitId": "ca-app-pub-6963403476404310/4938079366",
         "interstitialUnitId": "ca-app-pub-6963403476404310/9998834355"
+      },
+      "router": {},
+      "eas": {
+        "projectId": "71c32bb1-e1cd-41d0-8c0f-5cf91e585269"
       }
     }
   }
