@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { FAB, IconButton } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ import HealthRing from '../components/HealthRing';
 import DrawerGrid from '../components/DrawerGrid';
 import HomeMoodBubble from '../components/HomeMoodBubble';
 import { getSeasonalTip, analyzeBillTrends } from '../utils/smartLogic';
+import { THEME_COLOR_MAP } from '../utils/theme';
 
 const COLORS = {
   primary: "#F57C00",
@@ -32,6 +33,9 @@ export default function Dashboard() {
   const router = useRouter();
   const { history, homeProfile, xp } = useHomeContext();
   const [refreshing, setRefreshing] = useState(false);
+
+  // --- Dynamic Theme Color ---
+  const currentThemeColor = THEME_COLOR_MAP[homeProfile?.themeColor] || THEME_COLOR_MAP.orange;
 
   // --- 1. GREETING LOGIC ---
   const greeting = useMemo(() => {
@@ -162,15 +166,22 @@ export default function Dashboard() {
   }, [getMonthlyStats, homeProfile, currentMonth, currentYear, savingsGoals]);
 
   // --- 5. REFINED HEALTH SCORE (Including Finance) ---
-  const finalHealthScore = useMemo(() => {
+  const { finalHealthScore, finalIssues } = useMemo(() => {
     let score = healthScore;
+    const currentIssues = [...issues];
+
     if (financeStats.balance < 0) {
       // Penalty for debt: -1 point for every 100 TL debt, max -30
       const penalty = Math.min(30, Math.floor(Math.abs(financeStats.balance) / 100));
       score -= penalty;
+      currentIssues.push(`Bütçe bakiyesi eksiye düşmüş (${financeStats.balance} TL)`);
     }
-    return Math.max(0, score);
-  }, [healthScore, financeStats.balance]);
+
+    return {
+      finalHealthScore: Math.max(0, score),
+      finalIssues: currentIssues
+    };
+  }, [healthScore, issues, financeStats.balance]);
 
   // --- 6. GAMIFICATION LOGIC (EV RUHU) ---
   const { level, rank, mood } = useMemo(() => {
@@ -201,8 +212,22 @@ export default function Dashboard() {
     }
 
     return { level: currentLevel, rank: currentRank, mood: currentMood };
-  }, [xp, finalHealthScore, issues, financeStats]);
+  }, [xp, finalHealthScore, finalIssues, financeStats]);
 
+
+  const handleStatusPress = () => {
+    if (finalIssues.length === 0) {
+      Alert.alert("Evin Durumu", "Evinizin her şeyi tam, her şey yolunda! ✨");
+      return;
+    }
+
+    const issueText = finalIssues.map(issue => `• ${issue}`).join('\n');
+    Alert.alert(
+      "İlgi Bekleyen Konular",
+      `Şu konuların kontrol edilmesi ev puanınızı artıracaktır:\n\n${issueText}\n\nDetaylı bilgi için ilgili çekmeceleri kontrol edebilirsiniz.`,
+      [{ text: "Tamam" }]
+    );
+  };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -214,7 +239,7 @@ export default function Dashboard() {
     <View style={styles.mainContainer}>
       {/* --- 1. PREMIUM HEADER WITH GRADIENT --- */}
       <LinearGradient
-        colors={['#FF9800', '#F57C00']} // Orange Gradient
+        colors={[currentThemeColor + 'CC', currentThemeColor]} // Applied dynamic theme color with transparency
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerBackground}
@@ -243,12 +268,12 @@ export default function Dashboard() {
         style={styles.contentContainer}
         contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={currentThemeColor} />
         }
       >
         {/* --- 2. PULSE SECTION (Score) --- */}
         <View style={styles.pulseSection}>
-          <View style={styles.ringContainer}>
+          <View style={[styles.ringContainer, { shadowColor: currentThemeColor }]}>
             <HealthRing score={finalHealthScore} size={160} />
             <HomeMoodBubble mood={mood} />
 
@@ -260,7 +285,7 @@ export default function Dashboard() {
               <Text style={styles.levelText}>Lvl {level}</Text>
             </View>
           </View>
-          <View style={styles.pulseMessage}>
+          <TouchableOpacity style={styles.pulseMessage} onPress={handleStatusPress} activeOpacity={0.7}>
             {finalHealthScore >= 90 ? (
               <View style={styles.statusBadgeSuccess}>
                 <MaterialCommunityIcons name="check-circle" size={16} color="white" />
@@ -277,7 +302,7 @@ export default function Dashboard() {
                 <Text style={styles.statusText}>Acil müdahale gerekiyor!</Text>
               </View>
             )}
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* --- 3. FINANCE SUMMARY CARD --- */}
@@ -287,8 +312,8 @@ export default function Dashboard() {
             onPress={() => router.push('/budget')}
             activeOpacity={0.8}
           >
-            <View style={styles.financeIconContainer}>
-              <MaterialCommunityIcons name="wallet-outline" size={24} color={COLORS.primary} />
+            <View style={[styles.financeIconContainer, { backgroundColor: currentThemeColor + '15' }]}>
+              <MaterialCommunityIcons name="wallet-outline" size={24} color={currentThemeColor} />
             </View>
             <View style={styles.financeTextContainer}>
               <Text style={styles.financeLabel}>Aylık Bakiye</Text>
@@ -339,7 +364,7 @@ export default function Dashboard() {
       <FAB
         icon="plus"
         color="white"
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: currentThemeColor }]}
         onPress={() => router.push('/add-record')}
       />
 

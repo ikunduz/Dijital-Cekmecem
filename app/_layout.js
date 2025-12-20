@@ -16,13 +16,7 @@ const COLORS = {
   background: "#f8f9fa",
 };
 
-// Theme color mapping
-const THEME_COLOR_MAP = {
-  blue: '#1d72d3',
-  teal: '#0d9488',
-  orange: '#F57C00',
-  slate: '#475569',
-};
+import { THEME_COLOR_MAP } from '../utils/theme';
 
 // 1. Define MenuRow Component
 const MenuRow = ({ title, icon, onPress }) => (

@@ -15,13 +15,7 @@ const COLORS = {
     border: "#e5e7eb",
 };
 
-// Theme Colors for Profile
-const THEME_COLORS = [
-    { id: 'blue', color: '#1d72d3', name: 'Mavi' },
-    { id: 'teal', color: '#0d9488', name: 'Turkuaz' },
-    { id: 'orange', color: '#F57C00', name: 'Turuncu' },
-    { id: 'slate', color: '#475569', name: 'Koyu Gri' },
-];
+import { THEME_COLORS } from '../utils/theme';
 
 export default function Settings() {
     const router = useRouter();

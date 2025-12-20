@@ -5,6 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useHomeContext } from '../context/HomeContext';
 import * as Sharing from 'expo-sharing';
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 
 const COLORS = {
     primary: "#F57C00",
@@ -150,25 +153,46 @@ export default function FolderDetail() {
 
     const openPdf = async (uri) => {
         try {
-            const isAvailable = await Sharing.isAvailableAsync();
-            if (isAvailable) {
-                await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'PDF Dosyasını Aç' });
+            if (Platform.OS === 'android') {
+                // For Android, use IntentLauncher for direct "Open With" experience (Adobe Reader support)
+                const contentUri = await FileSystem.getContentUriAsync(uri);
+                await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+                    data: contentUri,
+                    flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+                    type: 'application/pdf',
+                });
             } else {
-                Alert.alert('Hata', 'Paylaşım desteklenmiyor.');
+                // For iOS, sharing dialog works well as a preview
+                const isAvailable = await Sharing.isAvailableAsync();
+                if (isAvailable) {
+                    await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'PDF Dosyasını Aç' });
+                } else {
+                    Alert.alert('Hata', 'Paylaşım desteklenmiyor.');
+                }
             }
         } catch (error) {
             console.error('Error opening PDF:', error);
-            Alert.alert('Hata', 'PDF açılamadı.');
+            Alert.alert('Hata', 'PDF açılamadı. Cihazınızda bir PDF görüntüleyici yüklü olduğundan emin olun.');
         }
     };
 
     const openImage = async (uri) => {
         try {
-            const isAvailable = await Sharing.isAvailableAsync();
-            if (isAvailable) {
-                await Sharing.shareAsync(uri, { mimeType: 'image/jpeg', dialogTitle: 'Görüntüyü Aç' });
+            if (Platform.OS === 'android') {
+                const contentUri = await FileSystem.getContentUriAsync(uri);
+                await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+                    data: contentUri,
+                    flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+                    type: 'image/*',
+                });
+            } else {
+                const isAvailable = await Sharing.isAvailableAsync();
+                if (isAvailable) {
+                    await Sharing.shareAsync(uri, { mimeType: 'image/jpeg', dialogTitle: 'Görüntüyü Aç' });
+                }
             }
         } catch (error) {
+            console.error('Error opening image:', error);
             Alert.alert('Hata', 'Dosya açılamadı.');
         }
     }
